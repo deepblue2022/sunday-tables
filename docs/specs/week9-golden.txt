@@ -1,0 +1,19 @@
+== Team table (week 9) ==
+Art     Allen=15  Gibbs=13  McCaffrey=19  Smith-Njigba=5  Chase=21  TOTAL=73
+Mxue    Burrow=28  Gibbs=13  McCaffrey=19  Nacua=23  Chase=21  TOTAL=104
+Vince   Purdy=27  Gibbs=13  Robinson=20  Chase=21  Lamb=25  TOTAL=106
+Kevin   Burrow=28  Walker=32  McCaffrey=19  Smith-Njigba=5  Chase=21  TOTAL=105
+Galli   Allen=15  Walker=32  Robinson=20  Nacua=23  Lamb=25  TOTAL=115
+JD      Purdy=27  Gibbs=13  McCaffrey=19  Smith-Njigba=5  Nacua=23  TOTAL=87
+JohnO   Burrow=28  Walker=32  Williams=18  Smith-Njigba=5  Nacua=23  TOTAL=106
+Pot $140: winner(s) ['Galli'], $140.00 each
+
+== Lightning table ($2/pt) ==
+RB2   winner ['Mxue']  Art:Cook=16  Mxue:Irving=23  Vince:Hubbard=8  Kevin:Williams=5  Galli:Swift=3  JD:Taylor=5  JohnO:Brown=6
+QB2   winner ['Mxue']  Art:Stafford=14  Mxue:Maye=23  Vince:Prescott=22  Kevin:Goff=8  Galli:Williams=20  JD:Lawrence=15  JohnO:Mahomes=18
+QB3   winner ['Kevin', 'JD']  Art:Nix=17  Mxue:Shough=21  Vince:Daniels=17  Kevin:Love=36  Galli:Willis=6  JD:Stroud=36  JohnO:Cousins=19
+QB4   winner ['Galli']  Art:Jones=13  Mxue:Smith=8  Vince:Wentz=4  Kevin:Penix=16  Galli:Young=23  JD:McCarthy=8  JohnO:Mayfield=14
+WR2   winner ['Mxue']  Art:Kittle=5  Mxue:Bowers=17  Vince:Nabers=4  Kevin:London=6  Galli:Olave=9  JD:Brown=8  JohnO:Higgins=15
+WR3   winner ['Mxue']  Art:Collins=11  Mxue:Watson=23  Vince:Washington=12  Kevin:Golden=22  Galli:McMillan=11  JD:Williams=3  JohnO:Jefferson=5
+RB3   winner ['Art']  Art:Coleman=14  Mxue:Stevenson=13  Vince:Judkins=4  Kevin:Henry=5  Galli:Gordon=5  JD:Tuten=8  JohnO:Jacobs=0
+Net (settled columns): Art -40.00  Mxue +468.00  Vince -176.00  Kevin -22.00  Galli -14.00  JD -52.00  JohnO -164.00

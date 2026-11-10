@@ -1,0 +1,9 @@
+{
+  "name": "fantasy-league",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "score": "node --use-system-ca cli/score.mjs"
+  }
+}
