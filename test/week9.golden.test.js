@@ -67,3 +67,19 @@ test("Week 9 settlement and accumulated standings", () => {
   const s = standings(baseline, [{ week: 9, recorded: true, final: true, settlement: result.settlement }], league);
   assert.deepEqual(s.totals, { JD: 50000, JohnO: 40800, Mxue: 23000, Art: 7400, Kevin: -13400, Galli: -35200, Vince: -72600 });
 });
+
+test("Week 9 team table: all 35 player scores match the old scorer's output", () => {
+  const { result } = week9();
+  const lines = readFileSync(new URL("../docs/specs/week9-golden.txt", import.meta.url), "utf8").split("\n");
+  let cells = 0;
+  for (const o of OWNERS) {
+    const line = lines.find((l) => l.startsWith(`${o} `) && l.includes("TOTAL="));
+    const golden = [...line.matchAll(/\s[^=\s]+=(\d+)/g)].map((m) => Number(m[1])).slice(0, 5);
+    assert.equal(golden.length, 5, o);
+    result.team.rows[o].players.forEach((p, i) => {
+      assert.equal(p.points, golden[i], `${o} ${p.name}`);
+      cells++;
+    });
+  }
+  assert.equal(cells, 35);
+});

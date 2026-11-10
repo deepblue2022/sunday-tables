@@ -91,7 +91,7 @@ const fakeFetch = (phases, failing = []) => {
     }
     const id = url.match(/event=(\w+)/)[1];
     if (failing.includes(id)) throw new Error(`summary ${id} 503`);
-    return { boxscore: { players: [] }, scoringPlays: [] };
+    return { boxscore: { players: [{ statistics: [{ name: "rushing", keys: ["rushingYards"], athletes: [{ athlete: { id: "z" }, stats: ["5"] }] }] }] }, scoringPlays: [] };
   };
   return { fetchFn, calls };
 };
@@ -143,4 +143,64 @@ test("loadLive reports a failed game and still loads the others; a failure is no
 test("loadLive rejects when the scoreboard fails", async () => {
   const { weekFile } = build();
   await assert.rejects(loadLive(weekFile, fakeFetch({}, ["scoreboard"]).fetchFn), /scoreboard 503/);
+});
+
+// --- added after Task 5 review ---
+
+test("a team in two games this week is unknown unless only one of them counts", () => {
+  const g1 = game("done", "g1", ["AAA", "BBB"]);
+  const stats = { g1: { stats: {}, twoPt: [] }, g2: { stats: { p: { rushYds: 100 } }, twoPt: [] } };
+  // finished game plus one still to play: cannot be a final 0
+  assert.deepEqual(one({ games: [g1, game("pre", "g2", ["AAA", "CCC"])], byeTeams: [] }, stats), { points: 0, state: "unknown" });
+  // both played: ambiguous, the scorekeeper decides
+  assert.deepEqual(one({ games: [g1, game("done", "g2", ["AAA", "CCC"])], byeTeams: [] }, stats), { points: 0, state: "unknown" });
+  // a cancelled game plus a played one: the played one counts
+  assert.deepEqual(one({ games: [game("unresolved", "g1", ["AAA", "BBB"]), game("done", "g2", ["AAA", "CCC"])], byeTeams: [] }, stats), { points: 10, state: "final" });
+});
+
+test("a team with a game is never bye, even if it is also on the bye list", () => {
+  assert.deepEqual(one({ games: [game("pre")], byeTeams: ["AAA"] }, {}), { points: 0, state: "not_started" });
+});
+
+test("loadLive treats an empty summary for a finished game as a failure and does not cache it", async () => {
+  const { weekFile } = build();
+  const cache = new Map();
+  const fetchFn = async (url) => (url.includes("scoreboard") ? sbJson({ a: [DONE, ["AAA", "BBB"]] }) : {});
+  const r = await loadLive(weekFile, fetchFn, cache);
+  assert.deepEqual(r.gamesById, {});
+  assert.equal(r.errors.length, 1);
+  assert.equal(cache.size, 0);
+});
+
+test("loadLive accepts an empty summary for a game that has only just started", async () => {
+  const { weekFile } = build();
+  const fetchFn = async (url) => (url.includes("scoreboard") ? sbJson({ a: [IN, ["AAA", "BBB"]] }) : {});
+  const r = await loadLive(weekFile, fetchFn);
+  assert.deepEqual(r.gamesById, { a: { stats: {}, twoPt: [] } });
+  assert.deepEqual(r.errors, []);
+});
+
+test("loadLive drops a cached game if the scoreboard stops calling it finished", async () => {
+  const { weekFile } = build();
+  const cache = new Map();
+  const full = { boxscore: { players: [{ statistics: [{ name: "rushing", keys: ["rushingYards"], athletes: [{ athlete: { id: "z" }, stats: ["5"] }] }] }] } };
+  const mk = (type) => {
+    const calls = [];
+    return { calls, fetchFn: async (url) => (calls.push(url), url.includes("scoreboard") ? sbJson({ a: [type, ["AAA", "BBB"]] }) : full) };
+  };
+  await loadLive(weekFile, mk(DONE).fetchFn, cache);
+  const again = mk(IN);
+  await loadLive(weekFile, again.fetchFn, cache);
+  assert.equal(again.calls.filter((c) => c.includes("summary")).length, 1);
+  assert.equal(cache.has("a"), false);
+});
+
+test("loadLive survives a game fetch that rejects with a non-Error", async () => {
+  const { weekFile } = build();
+  const fetchFn = async (url) => {
+    if (url.includes("scoreboard")) return sbJson({ a: [DONE, ["AAA", "BBB"]] });
+    throw null;
+  };
+  const r = await loadLive(weekFile, fetchFn);
+  assert.equal(r.errors.length, 1);
 });

@@ -206,3 +206,12 @@ test("scoreWeek names the week and player when points are not an integer", () =>
   playersById["T-Art-0"] = { state: "final" };
   assert.throws(() => scoreWeek(weekFile, playersById, league), /2026-9.*Art T0/);
 });
+
+test("validateWeekFile rejects one player id listed with two different teams or names", () => {
+  const { weekFile } = build();
+  weekFile.lightning_table.rosters.Mxue[0] = { ...weekFile.team_table.rosters.Art[0], team: "ZZZ" };
+  assert.throws(() => validateWeekFile(weekFile, league), /2026-9.*Art T0/);
+  const ok = build().weekFile;
+  ok.lightning_table.rosters.Mxue[0] = { ...ok.team_table.rosters.Art[0] };
+  assert.doesNotThrow(() => validateWeekFile(ok, league));
+});

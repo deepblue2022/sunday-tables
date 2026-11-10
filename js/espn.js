@@ -110,16 +110,20 @@ export async function loadLive(weekFile, fetchFn, cache = new Map()) {
   const wanted = relevantGames(weekFile, scoreboard).filter((g) => g.phase === "in" || g.phase === "done");
   await Promise.all(
     wanted.map(async (g) => {
-      if (cache.has(g.id)) {
+      if (g.phase === "done" && cache.has(g.id)) {
         gamesById[g.id] = cache.get(g.id);
         return;
       }
+      cache.delete(g.id);
       try {
         const summary = await fetchGame(g.id, fetchFn);
+        if (g.phase === "done" && !Object.keys(summary.stats).length) {
+          throw new Error("finished game came back with no box score");
+        }
         gamesById[g.id] = summary;
         if (g.phase === "done") cache.set(g.id, summary);
       } catch (err) {
-        errors.push(`${g.teams.join(" v ")} (game ${g.id}): ${err.message}`);
+        errors.push(`${g.teams.join(" v ")} (game ${g.id}): ${err?.message ?? err}`);
       }
     }),
   );

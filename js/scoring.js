@@ -62,6 +62,17 @@ export function validateWeekFile(weekFile, league) {
       }
     }
   }
+  // One athlete id must mean one player on one team wherever it appears.
+  const seen = new Map();
+  for (const t of TABLES) {
+    for (const p of Object.values(weekFile?.[t]?.rosters ?? {}).flat()) {
+      if (!isText(p?.id)) continue;
+      const first = seen.get(p.id) ?? seen.set(p.id, p).get(p.id);
+      if (first.team !== p.team || first.name !== p.name) {
+        problems.push(`player id ${p.id} is listed as both ${first.name} (${first.team}) and ${p.name} (${p.team})`);
+      }
+    }
+  }
   if (problems.length) throw new Error(`Week file ${weekLabel(weekFile)}: ${problems.join("; ")}`);
 }
 
@@ -186,11 +197,15 @@ export function relevantGames(weekFile, scoreboard) {
 export function derivePlayers(weekFile, scoreboard, gamesById) {
   const out = {};
   for (const p of rostered(weekFile)) {
-    const game = scoreboard.games.find((g) => g.teams.includes(p.team));
+    // Normally one game per team. With several (a rescheduling), cancelled ones are set aside;
+    // if more than one still counts the player stays unknown for the scorekeeper to settle.
+    let games = scoreboard.games.filter((g) => g.teams.includes(p.team));
+    if (games.length > 1) games = games.filter((g) => g.phase !== "unresolved");
+    const game = games.length === 1 ? games[0] : null;
     let state = "unknown";
     let points = 0;
     if (!game) {
-      if (scoreboard.byeTeams.includes(p.team)) state = "bye";
+      if (!games.length && scoreboard.byeTeams.includes(p.team)) state = "bye";
     } else if (game.phase === "pre") {
       state = "not_started";
     } else if (game.phase === "in" || game.phase === "done") {
