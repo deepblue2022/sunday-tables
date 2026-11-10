@@ -1,0 +1,14 @@
+{
+  "name": "Fantasy League",
+  "owners": [
+    { "key": "Art", "display": "Art" },
+    { "key": "Mxue", "display": "Mxue" },
+    { "key": "Vince", "display": "Vince" },
+    { "key": "Kevin", "display": "Kevin" },
+    { "key": "Galli", "display": "Galli" },
+    { "key": "JD", "display": "JD" },
+    { "key": "JohnO", "display": "JohnO" }
+  ],
+  "teamBuyInCents": 2000,
+  "lightningCentsPerPoint": 200
+}

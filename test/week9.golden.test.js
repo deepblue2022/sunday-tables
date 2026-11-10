@@ -83,3 +83,14 @@ test("Week 9 team table: all 35 player scores match the old scorer's output", ()
   }
   assert.equal(cells, 35);
 });
+
+test("the recorded Week 9 data file gives the same results as the fixtures", () => {
+  const recorded = JSON.parse(readFileSync(new URL("../data/weeks/2026-09.json", import.meta.url), "utf8"));
+  const realLeague = JSON.parse(readFileSync(new URL("../data/league.json", import.meta.url), "utf8"));
+  const fromFile = scoreWeek(recorded, recorded.recorded.players, realLeague);
+  const { result } = week9();
+  assert.equal(fromFile.final, true);
+  assert.deepEqual(fromFile.settlement, result.settlement);
+  assert.deepEqual(fromFile.team.winners, ["Galli"]);
+  assert.equal(Object.keys(recorded.recorded.players).length, 49 + 12); // 49 lightning players + 12 distinct team-table players
+});

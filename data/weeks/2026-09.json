@@ -1,0 +1,724 @@
+{
+ "season": 2026,
+ "week": 9,
+ "team_table": {
+  "columns": [
+   "QB",
+   "RB",
+   "RB",
+   "WR",
+   "WR"
+  ],
+  "rosters": {
+   "Art": [
+    {
+     "name": "Josh Allen",
+     "id": "3918298",
+     "team": "BUF"
+    },
+    {
+     "name": "Jahmyr Gibbs",
+     "id": "4429795",
+     "team": "DET"
+    },
+    {
+     "name": "Christian McCaffrey",
+     "id": "3117251",
+     "team": "SF"
+    },
+    {
+     "name": "Jaxon Smith-Njigba",
+     "id": "4430878",
+     "team": "SEA"
+    },
+    {
+     "name": "Ja'Marr Chase",
+     "id": "4362628",
+     "team": "CIN"
+    }
+   ],
+   "Mxue": [
+    {
+     "name": "Joe Burrow",
+     "id": "3915511",
+     "team": "CIN"
+    },
+    {
+     "name": "Jahmyr Gibbs",
+     "id": "4429795",
+     "team": "DET"
+    },
+    {
+     "name": "Christian McCaffrey",
+     "id": "3117251",
+     "team": "SF"
+    },
+    {
+     "name": "Puka Nacua",
+     "id": "4426515",
+     "team": "LAR"
+    },
+    {
+     "name": "Ja'Marr Chase",
+     "id": "4362628",
+     "team": "CIN"
+    }
+   ],
+   "Vince": [
+    {
+     "name": "Brock Purdy",
+     "id": "4361741",
+     "team": "SF"
+    },
+    {
+     "name": "Jahmyr Gibbs",
+     "id": "4429795",
+     "team": "DET"
+    },
+    {
+     "name": "Bijan Robinson",
+     "id": "4430807",
+     "team": "ATL"
+    },
+    {
+     "name": "Ja'Marr Chase",
+     "id": "4362628",
+     "team": "CIN"
+    },
+    {
+     "name": "CeeDee Lamb",
+     "id": "4241389",
+     "team": "DAL"
+    }
+   ],
+   "Kevin": [
+    {
+     "name": "Joe Burrow",
+     "id": "3915511",
+     "team": "CIN"
+    },
+    {
+     "name": "Kenneth Walker III",
+     "id": "4567048",
+     "team": "KC"
+    },
+    {
+     "name": "Christian McCaffrey",
+     "id": "3117251",
+     "team": "SF"
+    },
+    {
+     "name": "Jaxon Smith-Njigba",
+     "id": "4430878",
+     "team": "SEA"
+    },
+    {
+     "name": "Ja'Marr Chase",
+     "id": "4362628",
+     "team": "CIN"
+    }
+   ],
+   "Galli": [
+    {
+     "name": "Josh Allen",
+     "id": "3918298",
+     "team": "BUF"
+    },
+    {
+     "name": "Kenneth Walker III",
+     "id": "4567048",
+     "team": "KC"
+    },
+    {
+     "name": "Bijan Robinson",
+     "id": "4430807",
+     "team": "ATL"
+    },
+    {
+     "name": "Puka Nacua",
+     "id": "4426515",
+     "team": "LAR"
+    },
+    {
+     "name": "CeeDee Lamb",
+     "id": "4241389",
+     "team": "DAL"
+    }
+   ],
+   "JD": [
+    {
+     "name": "Brock Purdy",
+     "id": "4361741",
+     "team": "SF"
+    },
+    {
+     "name": "Jahmyr Gibbs",
+     "id": "4429795",
+     "team": "DET"
+    },
+    {
+     "name": "Christian McCaffrey",
+     "id": "3117251",
+     "team": "SF"
+    },
+    {
+     "name": "Jaxon Smith-Njigba",
+     "id": "4430878",
+     "team": "SEA"
+    },
+    {
+     "name": "Puka Nacua",
+     "id": "4426515",
+     "team": "LAR"
+    }
+   ],
+   "JohnO": [
+    {
+     "name": "Joe Burrow",
+     "id": "3915511",
+     "team": "CIN"
+    },
+    {
+     "name": "Kenneth Walker III",
+     "id": "4567048",
+     "team": "KC"
+    },
+    {
+     "name": "Javonte Williams",
+     "id": "4361579",
+     "team": "DAL"
+    },
+    {
+     "name": "Jaxon Smith-Njigba",
+     "id": "4430878",
+     "team": "SEA"
+    },
+    {
+     "name": "Puka Nacua",
+     "id": "4426515",
+     "team": "LAR"
+    }
+   ]
+  }
+ },
+ "lightning_table": {
+  "columns": [
+   "RB2",
+   "QB2",
+   "QB3",
+   "QB4",
+   "WR2",
+   "WR3",
+   "RB3"
+  ],
+  "rosters": {
+   "Art": [
+    {
+     "name": "James Cook III",
+     "id": "4379399",
+     "team": "BUF"
+    },
+    {
+     "name": "Matthew Stafford",
+     "id": "12483",
+     "team": "LAR"
+    },
+    {
+     "name": "Bo Nix",
+     "id": "4426338",
+     "team": "DEN"
+    },
+    {
+     "name": "Daniel Jones",
+     "id": "3917792",
+     "team": "IND"
+    },
+    {
+     "name": "George Kittle",
+     "id": "3040151",
+     "team": "SF"
+    },
+    {
+     "name": "Nico Collins",
+     "id": "4258173",
+     "team": "HOU"
+    },
+    {
+     "name": "Jonah Coleman",
+     "id": "4702555",
+     "team": "DEN"
+    }
+   ],
+   "Mxue": [
+    {
+     "name": "Bucky Irving",
+     "id": "4596448",
+     "team": "TB"
+    },
+    {
+     "name": "Drake Maye",
+     "id": "4431452",
+     "team": "NE"
+    },
+    {
+     "name": "Tyler Shough",
+     "id": "4360689",
+     "team": "NO"
+    },
+    {
+     "name": "Geno Smith",
+     "id": "15864",
+     "team": "NYJ"
+    },
+    {
+     "name": "Brock Bowers",
+     "id": "4432665",
+     "team": "LV"
+    },
+    {
+     "name": "Christian Watson",
+     "id": "4248528",
+     "team": "GB"
+    },
+    {
+     "name": "Rhamondre Stevenson",
+     "id": "4569173",
+     "team": "NE"
+    }
+   ],
+   "Vince": [
+    {
+     "name": "Chuba Hubbard",
+     "id": "4241416",
+     "team": "CAR"
+    },
+    {
+     "name": "Dak Prescott",
+     "id": "2577417",
+     "team": "DAL"
+    },
+    {
+     "name": "Jayden Daniels",
+     "id": "4426348",
+     "team": "WSH"
+    },
+    {
+     "name": "Carson Wentz",
+     "id": "2573079",
+     "team": "MIN"
+    },
+    {
+     "name": "Malik Nabers",
+     "id": "4595348",
+     "team": "NYG"
+    },
+    {
+     "name": "Parker Washington",
+     "id": "4432620",
+     "team": "JAX"
+    },
+    {
+     "name": "Quinshon Judkins",
+     "id": "4685702",
+     "team": "CLE"
+    }
+   ],
+   "Kevin": [
+    {
+     "name": "Kyren Williams",
+     "id": "4430737",
+     "team": "LAR"
+    },
+    {
+     "name": "Jared Goff",
+     "id": "3046779",
+     "team": "DET"
+    },
+    {
+     "name": "Jordan Love",
+     "id": "4036378",
+     "team": "GB"
+    },
+    {
+     "name": "Michael Penix Jr.",
+     "id": "4360423",
+     "team": "ATL"
+    },
+    {
+     "name": "Drake London",
+     "id": "4426502",
+     "team": "ATL"
+    },
+    {
+     "name": "Matthew Golden",
+     "id": "4701936",
+     "team": "GB"
+    },
+    {
+     "name": "Derrick Henry",
+     "id": "3043078",
+     "team": "BAL"
+    }
+   ],
+   "Galli": [
+    {
+     "name": "D'Andre Swift",
+     "id": "4259545",
+     "team": "CHI"
+    },
+    {
+     "name": "Caleb Williams",
+     "id": "4431611",
+     "team": "CHI"
+    },
+    {
+     "name": "Malik Willis",
+     "id": "4242512",
+     "team": "MIA"
+    },
+    {
+     "name": "Bryce Young",
+     "id": "4685720",
+     "team": "CAR"
+    },
+    {
+     "name": "Chris Olave",
+     "id": "4361370",
+     "team": "NO"
+    },
+    {
+     "name": "Tetairoa McMillan",
+     "id": "4685472",
+     "team": "CAR"
+    },
+    {
+     "name": "Ollie Gordon II",
+     "id": "4711533",
+     "team": "MIA"
+    }
+   ],
+   "JD": [
+    {
+     "name": "Jonathan Taylor",
+     "id": "4242335",
+     "team": "IND"
+    },
+    {
+     "name": "Trevor Lawrence",
+     "id": "4360310",
+     "team": "JAX"
+    },
+    {
+     "name": "C.J. Stroud",
+     "id": "4432577",
+     "team": "HOU"
+    },
+    {
+     "name": "J.J. McCarthy",
+     "id": "4433970",
+     "team": "NYG"
+    },
+    {
+     "name": "Amon-Ra St. Brown",
+     "id": "4374302",
+     "team": "DET"
+    },
+    {
+     "name": "Jameson Williams",
+     "id": "4426388",
+     "team": "DET"
+    },
+    {
+     "name": "Bhayshul Tuten",
+     "id": "4882093",
+     "team": "JAX"
+    }
+   ],
+   "JohnO": [
+    {
+     "name": "Chase Brown",
+     "id": "4362238",
+     "team": "CIN"
+    },
+    {
+     "name": "Patrick Mahomes",
+     "id": "3139477",
+     "team": "KC"
+    },
+    {
+     "name": "Kirk Cousins",
+     "id": "14880",
+     "team": "LV"
+    },
+    {
+     "name": "Baker Mayfield",
+     "id": "3052587",
+     "team": "TB"
+    },
+    {
+     "name": "Tee Higgins",
+     "id": "4239993",
+     "team": "CIN"
+    },
+    {
+     "name": "Justin Jefferson",
+     "id": "4262921",
+     "team": "MIN"
+    },
+    {
+     "name": "Josh Jacobs",
+     "id": "4047365",
+     "team": "GB"
+    }
+   ]
+  }
+ },
+ "recorded": {
+  "players": {
+   "12483": {
+    "points": 14,
+    "state": "final"
+   },
+   "14880": {
+    "points": 19,
+    "state": "final"
+   },
+   "15864": {
+    "points": 8,
+    "state": "final"
+   },
+   "2573079": {
+    "points": 4,
+    "state": "final"
+   },
+   "2577417": {
+    "points": 22,
+    "state": "final"
+   },
+   "3040151": {
+    "points": 5,
+    "state": "final"
+   },
+   "3043078": {
+    "points": 5,
+    "state": "final"
+   },
+   "3046779": {
+    "points": 8,
+    "state": "final"
+   },
+   "3052587": {
+    "points": 14,
+    "state": "final"
+   },
+   "3117251": {
+    "points": 19,
+    "state": "final"
+   },
+   "3139477": {
+    "points": 18,
+    "state": "final"
+   },
+   "3915511": {
+    "points": 28,
+    "state": "final"
+   },
+   "3917792": {
+    "points": 13,
+    "state": "final"
+   },
+   "3918298": {
+    "points": 15,
+    "state": "final"
+   },
+   "4036378": {
+    "points": 36,
+    "state": "final"
+   },
+   "4047365": {
+    "points": 0,
+    "state": "final"
+   },
+   "4239993": {
+    "points": 15,
+    "state": "final"
+   },
+   "4241389": {
+    "points": 25,
+    "state": "final"
+   },
+   "4241416": {
+    "points": 8,
+    "state": "final"
+   },
+   "4242335": {
+    "points": 5,
+    "state": "final"
+   },
+   "4242512": {
+    "points": 6,
+    "state": "final"
+   },
+   "4248528": {
+    "points": 23,
+    "state": "final"
+   },
+   "4258173": {
+    "points": 11,
+    "state": "final"
+   },
+   "4259545": {
+    "points": 3,
+    "state": "final"
+   },
+   "4262921": {
+    "points": 5,
+    "state": "final"
+   },
+   "4360310": {
+    "points": 15,
+    "state": "final"
+   },
+   "4360423": {
+    "points": 16,
+    "state": "final"
+   },
+   "4360689": {
+    "points": 21,
+    "state": "final"
+   },
+   "4361370": {
+    "points": 9,
+    "state": "final"
+   },
+   "4361579": {
+    "points": 18,
+    "state": "final"
+   },
+   "4361741": {
+    "points": 27,
+    "state": "final"
+   },
+   "4362238": {
+    "points": 6,
+    "state": "final"
+   },
+   "4362628": {
+    "points": 21,
+    "state": "final"
+   },
+   "4374302": {
+    "points": 8,
+    "state": "final"
+   },
+   "4379399": {
+    "points": 16,
+    "state": "final"
+   },
+   "4426338": {
+    "points": 17,
+    "state": "final"
+   },
+   "4426348": {
+    "points": 17,
+    "state": "final"
+   },
+   "4426388": {
+    "points": 3,
+    "state": "final"
+   },
+   "4426502": {
+    "points": 6,
+    "state": "final"
+   },
+   "4426515": {
+    "points": 23,
+    "state": "final"
+   },
+   "4429795": {
+    "points": 13,
+    "state": "final"
+   },
+   "4430737": {
+    "points": 5,
+    "state": "final"
+   },
+   "4430807": {
+    "points": 20,
+    "state": "final"
+   },
+   "4430878": {
+    "points": 5,
+    "state": "final"
+   },
+   "4431452": {
+    "points": 23,
+    "state": "final"
+   },
+   "4431611": {
+    "points": 20,
+    "state": "final"
+   },
+   "4432577": {
+    "points": 36,
+    "state": "final"
+   },
+   "4432620": {
+    "points": 12,
+    "state": "final"
+   },
+   "4432665": {
+    "points": 17,
+    "state": "final"
+   },
+   "4433970": {
+    "points": 8,
+    "state": "final"
+   },
+   "4567048": {
+    "points": 32,
+    "state": "final"
+   },
+   "4569173": {
+    "points": 13,
+    "state": "final"
+   },
+   "4595348": {
+    "points": 4,
+    "state": "final"
+   },
+   "4596448": {
+    "points": 23,
+    "state": "final"
+   },
+   "4685472": {
+    "points": 11,
+    "state": "final"
+   },
+   "4685702": {
+    "points": 4,
+    "state": "final"
+   },
+   "4685720": {
+    "points": 23,
+    "state": "final"
+   },
+   "4701936": {
+    "points": 22,
+    "state": "final"
+   },
+   "4702555": {
+    "points": 14,
+    "state": "final"
+   },
+   "4711533": {
+    "points": 5,
+    "state": "final"
+   },
+   "4882093": {
+    "points": 8,
+    "state": "final"
+   }
+  }
+ }
+}
