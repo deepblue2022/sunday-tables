@@ -11,7 +11,7 @@ import { OWNERS, TEAM_COLS, league, build, fixture, week9RawGames, week9WeekFile
 const read = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), "utf8"));
 const recorded = read("../data/weeks/2026-09.json");
 const realLeague = read("../data/league.json");
-const baseline = read("../data/baseline.json");
+const baseline = read("./fixtures/baseline-wk8.json");
 const games = week9RawGames();
 const sb9 = fixture("2026-09/scoreboard.json");
 const allPhase = (type) => ({ ...sb9, events: sb9.events.map((e) => ({ ...e, status: { type } })) });

@@ -119,7 +119,7 @@ test("parseArgs accepts the three commands and rejects anything else", () => {
 
 const recorded = JSON.parse(readFileSync(new URL("../data/weeks/2026-09.json", import.meta.url), "utf8"));
 const realLeague = JSON.parse(readFileSync(new URL("../data/league.json", import.meta.url), "utf8"));
-const baseline = JSON.parse(readFileSync(new URL("../data/baseline.json", import.meta.url), "utf8"));
+const baseline = JSON.parse(readFileSync(new URL("./fixtures/baseline-wk8.json", import.meta.url), "utf8"));
 
 test("the recorded Week 9 file holds exactly the rosters and player results the fixtures give", () => {
   const fromFixtures = week9WeekFile();

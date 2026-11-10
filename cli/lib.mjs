@@ -70,6 +70,26 @@ export function resolveDraft(draft, rosterPlayers, league) {
 }
 
 // Rostered players whose current ESPN team (currentTeams[id]) differs from the week file's.
+// `played` maps athlete id -> the team he played for in this week's games. A player whose listed
+// team (from today's rosters) differs is moved to the team he actually played for, so a week
+// resolved after a trade still finds his stats. Returns a new week file and the changes made.
+export function applyPlayedTeams(weekFile, played) {
+  const changes = [];
+  const seen = new Set();
+  const fix = (p) => {
+    const team = played[p.id];
+    if (!team || team === p.team) return p;
+    if (!seen.has(p.id)) changes.push({ name: p.name, from: p.team, to: team });
+    seen.add(p.id);
+    return { ...p, team };
+  };
+  const table = (t) => ({ ...t, rosters: Object.fromEntries(Object.entries(t.rosters).map(([o, r]) => [o, r.map(fix)])) });
+  return {
+    weekFile: { ...weekFile, team_table: table(weekFile.team_table), lightning_table: table(weekFile.lightning_table) },
+    changes,
+  };
+}
+
 export function teamMismatches(weekFile, currentTeams) {
   return unique(rostered(weekFile))
     .filter((p) => currentTeams[p.id] !== undefined && currentTeams[p.id] !== p.team)

@@ -67,6 +67,19 @@ export function parseGame(json) {
   return { stats, twoPt };
 }
 
+// From a raw game summary: athlete id -> abbreviation of the team he played for in that game.
+export function playedTeams(json) {
+  const out = {};
+  for (const team of json.boxscore?.players ?? []) {
+    const abbr = team.team?.abbreviation;
+    if (!abbr) continue;
+    for (const group of team.statistics ?? []) {
+      for (const a of group.athletes ?? []) out[String(a.athlete.id)] = abbr;
+    }
+  }
+  return out;
+}
+
 export async function fetchScoreboard(season, week, fetchFn) {
   return parseScoreboard(await fetchFn(`${API}/scoreboard?seasontype=2&week=${week}&dates=${season}`));
 }

@@ -11,7 +11,7 @@ import { OWNERS, TEAM_COLS, league, build, column, fixture, week9RawGames, week9
 const read = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), "utf8"));
 const recorded = read("../data/weeks/2026-09.json");
 const realLeague = read("../data/league.json");
-const baseline = read("../data/baseline.json");
+const baseline = read("./fixtures/baseline-wk8.json");
 const count = (html, needle) => html.split(needle).length - 1;
 const allStates = (state) => {
   const s = {};

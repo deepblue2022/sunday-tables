@@ -9,8 +9,8 @@ import { readFile, writeFile, rename } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { scoreWeek, standings, derivePlayers } from "../js/scoring.js";
-import { loadLive, fetchRosters } from "../js/espn.js";
-import { resolveDraft, recordWeek, zeros, teamMismatches, formatWeek, gatherWeeks, assertWeekIdentity, parseArgs } from "./lib.mjs";
+import { loadLive, fetchRosters, fetchScoreboard, playedTeams, API } from "../js/espn.js";
+import { resolveDraft, applyPlayedTeams, recordWeek, zeros, teamMismatches, formatWeek, gatherWeeks, assertWeekIdentity, parseArgs } from "./lib.mjs";
 
 const DATA = fileURLToPath(new URL("../data/", import.meta.url));
 const weekName = (season, week) => `${season}-${String(week).padStart(2, "0")}.json`;
@@ -54,7 +54,15 @@ async function currentTeams() {
 async function cmdResolve({ draft: draftArg, out }) {
   const league = await readJson(path.join(DATA, "league.json"));
   const draft = await readJson(path.resolve(process.cwd(), draftArg));
-  const weekFile = resolveDraft(draft, await fetchRosters(fetchFn), league);
+  const resolved = resolveDraft(draft, await fetchRosters(fetchFn), league);
+  // If some of the week's games have already been played, use the team each player played for.
+  const scoreboard = await fetchScoreboard(resolved.season, resolved.week, fetchFn);
+  const played = {};
+  for (const g of scoreboard.games.filter((g) => g.phase === "in" || g.phase === "done")) {
+    Object.assign(played, playedTeams(await fetchFn(`${API}/summary?event=${g.id}`)));
+  }
+  const { weekFile, changes } = applyPlayedTeams(resolved, played);
+  for (const c of changes) console.error(`Note: ${c.name} is on ${c.from} now but played this week for ${c.to}; using ${c.to}.`);
   if (out) {
     await writeJson(path.resolve(process.cwd(), out), weekFile);
     console.log(`Resolved ${weekFile.season} week ${weekFile.week} -> ${out}`);
