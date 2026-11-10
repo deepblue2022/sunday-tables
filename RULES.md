@@ -18,9 +18,24 @@
 - Ties for the top split the column's winnings; tied winners pay each other nothing
 
 ## Weekly workflow
-1. Save the pasted tables as `rosters_week<N>.json` (copy the previous week's file), using ESPN full display names
-   (e.g. "James Cook III", "Michael Penix Jr.", "Kenneth Walker III").
-2. Run `python3 score.py <season> <week>`. Players in unfinished games show `?`; columns with one are PENDING.
-3. Re-run after Monday Night Football to settle.
+All commands run from this folder. The site is the files in this folder; publishing is `git push`.
+
+1. **Record last week** once all its games are final: `npm run score -- <season> <week> --record`.
+   This freezes the results into `data/weeks/<season>-<week>.json`; the site then stops asking ESPN about that week.
+2. **Add the new week:** write the two pasted tables into a draft file (same shape as
+   `test/fixtures/2026-09/week-draft.json`), using ESPN full display names
+   (e.g. "James Cook III", "Michael Penix Jr.", "Kenneth Walker III"). Column order can differ week to week.
+3. **Resolve names:** `npm run score -- resolve <draft.json> --out data/weeks/<season>-<week>.json`.
+   Fix any names it cannot find and re-run.
+4. **List the week** in `data/weeks/index.json`.
+5. **Publish:** commit and `git push`. The site shows the week and updates on its own while games are on.
+6. To see the tables in the terminal at any time: `npm run score -- <season> <week>`.
+
+**Adding a past week** (before the starting totals in `data/baseline.json`): do steps 2-4, check the week's
+settlement against the old spreadsheet, subtract it from the baseline totals, set `through_week` one lower,
+then record the week. `resolve` uses the team each player played for that week, so traded players score correctly.
+
+**Cancelled or postponed games:** the site leaves that week provisional and the players show "?".
+The scorekeeper decides how to settle it.
 
 Data: ESPN public API (scoreboard + game summary box scores). 2-pt conversions are parsed from scoring-play text.
