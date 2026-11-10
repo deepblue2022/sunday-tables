@@ -117,3 +117,44 @@ test("fetchRosters takes team ids from the teams endpoint and flattens every ros
 test("a rejected fetch propagates", async () => {
   await assert.rejects(fetchGame("1", async () => { throw new Error("boom 503"); }), /boom 503/);
 });
+
+// --- added after Task 4 review ---
+
+test("parseGame: receiving lines map to recYds and recTD", () => {
+  const raw = fixture("2026-09/game-401873049.json");
+  const rec = raw.boxscore.players.flatMap((t) => t.statistics).filter((s) => s.name === "receiving").flatMap((s) => s.athletes);
+  const watson = rec.find((a) => a.athlete.displayName === "Christian Watson");
+  assert.deepEqual(parseGame(raw).stats[watson.athlete.id], { recYds: 171, recTD: 1 });
+});
+
+test("parseGame: junk or missing stat values become 0", () => {
+  const g = parseGame({
+    boxscore: { players: [{ statistics: [{ name: "rushing", keys: ["rushingAttempts", "rushingYards", "rushingTouchdowns"], athletes: [{ athlete: { id: 7 }, stats: ["1", "--"] }] }] }] },
+  });
+  assert.deepEqual(g.stats["7"], { rushYds: 0, rushTD: 0 });
+});
+
+test("parseGame: 2-pt names never cross a parenthesis, and each parenthetical is judged on its own", () => {
+  const plays = (text, abbr = "DEN") => ({ scoringPlays: [{ text, team: { abbreviation: abbr } }] });
+  assert.deepEqual(parseGame(plays("X 12 Yd Rush (Ryan Fitzgerald Kick) (Bo Nix Run for Two-Point Conversion)")).twoPt, [{ name: "Bo Nix", team: "DEN", points: 2 }]);
+  assert.deepEqual(parseGame(plays("X 12 Yd Rush (Two-Point Pass Conversion Failed) (Bo Nix Rush for Two-Point Conversion)")).twoPt, [{ name: "Bo Nix", team: "DEN", points: 2 }]);
+  assert.deepEqual(parseGame(plays("X 1 Yd Rush (Bo Nix Run for Two-Point Conversion Failed)")).twoPt, []);
+});
+
+test("parseGame: each 2-pt entry carries the scoring team of its own play", () => {
+  const g = parseGame({
+    scoringPlays: [
+      { text: "A 1 Yd Rush (Al One Run for Two-Point Conversion)", team: { abbreviation: "GB" } },
+      { text: "B 1 Yd Rush (Bo Two Run for Two-Point Conversion)", team: { abbreviation: "NE" } },
+    ],
+  });
+  assert.deepEqual(g.twoPt.map((t) => [t.name, t.team]), [["Al One", "GB"], ["Bo Two", "NE"]]);
+});
+
+test("fetchRosters falls back to the teams-list abbreviation", async () => {
+  const fetchFn = async (url) =>
+    url === `${API}/teams`
+      ? { sports: [{ leagues: [{ teams: [{ team: { id: "9", abbreviation: "GB" } }] }] }] }
+      : { athletes: [{ items: [{ id: 1, displayName: "A B", position: { abbreviation: "RB" } }] }] };
+  assert.deepEqual(await fetchRosters(fetchFn), [{ id: "1", name: "A B", team: "GB", pos: "RB" }]);
+});

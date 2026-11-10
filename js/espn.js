@@ -31,8 +31,9 @@ const toNumber = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const TWO_PT_PASS = /\((.+?) Pass to (.+?) for Two-Point Conversion\)/;
-const TWO_PT_RUN = /\((.+?) (?:Run|Rush) for Two-Point Conversion\)/;
+// Matched against the inside of one parenthetical at a time.
+const TWO_PT_PASS = /^(.+?) Pass to (.+?) for Two-Point Conversion$/;
+const TWO_PT_RUN = /^(.+?) (?:Run|Rush) for Two-Point Conversion$/;
 
 export function parseGame(json) {
   const stats = {};
@@ -50,15 +51,15 @@ export function parseGame(json) {
   }
   const twoPt = [];
   for (const play of json.scoringPlays ?? []) {
-    const text = play.text ?? "";
-    if (text.includes("Failed")) continue;
     const team = play.team?.abbreviation;
-    const pass = text.match(TWO_PT_PASS);
-    const run = text.match(TWO_PT_RUN);
-    if (pass) {
-      twoPt.push({ name: pass[1], team, points: 1 }, { name: pass[2], team, points: 2 });
-    } else if (run) {
-      twoPt.push({ name: run[1], team, points: 2 });
+    for (const [, inner] of (play.text ?? "").matchAll(/\(([^()]*)\)/g)) {
+      const pass = inner.match(TWO_PT_PASS);
+      const run = inner.match(TWO_PT_RUN);
+      if (pass) {
+        twoPt.push({ name: pass[1], team, points: 1 }, { name: pass[2], team, points: 2 });
+      } else if (run) {
+        twoPt.push({ name: run[1], team, points: 2 });
+      }
     }
   }
   return { stats, twoPt };
