@@ -19,6 +19,9 @@ export function playerPoints(statLine, twoPt = 0) {
 // Split totalCents among winners; leftover cents go one each in ownerOrder.
 export function splitCents(totalCents, winners, ownerOrder) {
   const ordered = ownerOrder.filter((o) => winners.includes(o));
+  if (!ordered.length || ordered.length !== new Set(winners).size) {
+    throw new Error(`splitCents: winners [${winners}] must be non-empty and all in the owner order`);
+  }
   const share = Math.floor(totalCents / ordered.length);
   let left = totalCents - share * ordered.length;
   const out = {};

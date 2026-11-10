@@ -32,3 +32,15 @@ test("splitCents gives leftover cents in owner order", () => {
 test("BLOCKING lists the states that keep a week provisional", () => {
   assert.deepEqual(BLOCKING, ["live", "not_started", "unknown"]);
 });
+
+test("playerPoints floors rushing and receiving separately, clamping each", () => {
+  assert.equal(playerPoints({ rushYds: 9, recYds: 9 }), 0);
+  assert.equal(playerPoints({ rushYds: -15, recYds: 15 }), 1);
+});
+
+test("splitCents refuses winners it cannot pay in full", () => {
+  const order = ["Art", "Mxue", "Vince"];
+  assert.throws(() => splitCents(14000, [], order), /winners/);
+  assert.throws(() => splitCents(14000, ["Bob"], order), /winners/);
+  assert.throws(() => splitCents(14000, ["Bob", "Art"], order), /winners/);
+});
