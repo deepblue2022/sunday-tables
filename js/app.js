@@ -1,6 +1,6 @@
 // Browser glue: load the data files, build the model (js/view.js), render it, and keep it fresh.
 import { newState, refresh, statusLine, bannerLines, checkIndex } from "./view.js";
-import { renderTeamTable, renderLightning, renderSettlement, renderStandings, esc } from "./render.js";
+import { renderTeamTable, renderLightning, renderSettlement, renderStandings, nextSort, esc } from "./render.js";
 
 const TIMEOUT_MS = 15000;
 const RETRY_MS = 60000;
@@ -53,6 +53,8 @@ let loading = false;
 let lastLoadAt = 0;
 let failed = false; // the last load could not finish; try again soon
 const shownHtml = {};
+const sorts = { settlement: null, standings: null }; // column each table is sorted by; null = league order
+let shownProblem = null;
 
 // Replace an element's HTML only when it changed, keeping each table's sideways scroll position.
 function setHtml(id, html) {
@@ -74,12 +76,13 @@ function banner(messages, isError = false) {
 }
 
 function render(dataProblem) {
+  shownProblem = dataProblem;
   const { league } = state;
   if (picked !== null && !model.weeks.some((w) => w.week === picked)) picked = null;
   const selected = picked ?? model.defaultWeek;
   const week = model.weeks.find((w) => w.week === selected) ?? null;
 
-  $("league").textContent = league.name ?? "Fantasy League";
+  $("league").textContent = league.name ?? "Sunday Tables";
   setHtml("week", model.weeks.map((w) => `<option value="${esc(w.week)}">Week ${esc(w.week)}</option>`).join(""));
   if (week) $("week").value = String(week.week);
   $("week").hidden = model.weeks.length === 0;
@@ -95,10 +98,10 @@ function render(dataProblem) {
   setHtml("team", shown ? renderTeamTable(shown, league, weekFile.team_table.columns) : "");
   setHtml("lightning", shown ? renderLightning(shown, league) : "");
   // No settlement to show until some real scores have loaded.
-  setHtml("settlement", week?.result ? renderSettlement(week.result, league) : "");
+  setHtml("settlement", week?.result ? renderSettlement(week.result, league, sorts.settlement) : "");
   setHtml(
     "standings",
-    model.standings ? renderStandings(model.standings, league) : `<p class="pot">Standings cannot be shown: ${esc(model.standingsProblem)}</p>`,
+    model.standings ? renderStandings(model.standings, league, sorts.standings) : `<p class="pot">Standings cannot be shown: ${esc(model.standingsProblem)}</p>`,
   );
   document.body.classList.remove("empty");
   document.body.classList.toggle("noweek", !shown);
@@ -154,6 +157,17 @@ $("week").addEventListener("change", (e) => {
   if (model) render(null);
 });
 $("refresh").addEventListener("click", load);
+// Clicking a column header in the settlement or standings table sorts by that column.
+for (const id of Object.keys(sorts)) {
+  $(id).addEventListener("click", (e) => {
+    const key = e.target.closest?.("button[data-sort]")?.dataset.sort;
+    if (!key || !model) return;
+    sorts[id] = nextSort(sorts[id], key);
+    render(shownProblem);
+    // the header was rebuilt; keep keyboard focus on the column just used
+    [...$(id).querySelectorAll("button[data-sort]")].find((b) => b.dataset.sort === key)?.focus();
+  });
+}
 // A hidden tab stops polling; when it comes back, catch up straight away if it has been a while.
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) clearTimeout(timer);

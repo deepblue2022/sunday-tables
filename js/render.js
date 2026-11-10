@@ -84,23 +84,71 @@ export function renderLightning(result, league) {
   );
 }
 
-export function renderSettlement(result, league) {
-  const rows = league.owners
+// ---------- Sorting (settlement and standings tables) ----------
+
+// A sort is {key, dir: "asc" | "desc"}; null means league order.
+// Clicking a column: first click sorts (names A to Z, numbers high to low), second reverses,
+// third returns to league order.
+export function nextSort(current, key) {
+  const first = key === "team" ? "asc" : "desc";
+  if (current?.key !== key) return { key, dir: first };
+  if (current.dir === first) return { key, dir: first === "asc" ? "desc" : "asc" };
+  return null;
+}
+
+// Owners in sorted order. `valueOf(owner)` gives the value for the sorted column; when the
+// column is unknown or has no values, league order is kept. Equal values keep league order.
+function sortedOwners(league, sort, valueOf) {
+  const owners = [...league.owners];
+  if (!sort) return owners;
+  const values = new Map(owners.map((o) => [o.key, valueOf(o)]));
+  if (owners.some((o) => values.get(o.key) === undefined || values.get(o.key) === null)) return owners;
+  const sign = sort.dir === "asc" ? 1 : -1;
+  return owners.sort((a, b) => {
+    const x = values.get(a.key);
+    const y = values.get(b.key);
+    return sign * (typeof x === "string" ? x.localeCompare(y) : x - y);
+  });
+}
+
+// A column header that sorts when clicked. `label` is already-escaped HTML.
+function sortHead(key, label, sort) {
+  const on = sort?.key === key;
+  const aria = on ? ` aria-sort="${sort.dir === "asc" ? "ascending" : "descending"}"` : "";
+  const arrow = on ? `<span class="arrow" aria-hidden="true"> ${sort.dir === "asc" ? "▲" : "▼"}</span>` : "";
+  return `<th${aria}><button type="button" class="sort" data-sort="${esc(key)}">${label}${arrow}</button></th>`;
+}
+
+export function renderSettlement(result, league, sort = null) {
+  const value = (o) => (sort.key === "team" ? o.display : result.settlement[o.key][sort.key]);
+  const rows = sortedOwners(league, sort, value)
     .map((o) => {
       const s = result.settlement[o.key];
       return `<tr>${rowHead(o)}${moneyCell(s.lightning)}${moneyCell(s.teamPot)}${moneyCell(s.total, "net ")}</tr>`;
     })
     .join("\n");
-  const head = "<tr><th>Team</th><th>Lightning</th><th>Team pot</th><th>Week</th></tr>";
+  const cols = [["team", "Team"], ["lightning", "Lightning"], ["teamPot", "Team pot"], ["total", "Week"]];
+  const head = `<tr>${cols.map(([key, label]) => sortHead(key, label, sort)).join("")}</tr>`;
   const label = result.final ? "" : `<p class="pot">${note("provisional")} games still to finish</p>`;
   return `${wrap(`<table class="grid"><thead>${head}</thead><tbody>\n${rows}\n</tbody></table>`, !result.final)}${label}`;
 }
 
-export function renderStandings(standings, league) {
+export function renderStandings(standings, league, sort = null) {
   const open = standings.open;
-  const weekHead = (w) => `<th>Wk ${esc(w.week)}${w.amounts ? (w.provisional ? note("provisional") : "") : note("not loaded")}</th>`;
-  const head = `<tr><th>Team</th><th>Thru Wk ${esc(standings.recordedThrough)}</th>${open.map(weekHead).join("")}<th>Total</th><th>Order</th></tr>`;
-  const rows = league.owners
+  const weekKey = (w) => `wk-${w.week}`;
+  const weekHead = (w) =>
+    sortHead(weekKey(w), `Wk ${esc(w.week)}${w.amounts ? (w.provisional ? note("provisional") : "") : note("not loaded")}`, sort);
+  const head =
+    `<tr>${sortHead("team", "Team", sort)}${sortHead("base", `Thru Wk ${esc(standings.recordedThrough)}`, sort)}` +
+    `${open.map(weekHead).join("")}${sortHead("total", "Total", sort)}${sortHead("order", "Order", sort)}</tr>`;
+  const value = (o) => {
+    if (sort.key === "team") return o.display;
+    if (sort.key === "base") return standings.base[o.key];
+    if (sort.key === "total") return standings.totals[o.key];
+    if (sort.key === "order") return standings.order[o.key];
+    return open.find((w) => weekKey(w) === sort.key)?.amounts?.[o.key];
+  };
+  const rows = sortedOwners(league, sort, value)
     .map((o) => {
       const weeks = open.map((w) => (w.amounts ? moneyCell(w.amounts[o.key]) : `<td class="money">${DASH}</td>`)).join("");
       const total = moneyCell(standings.totals[o.key], "net ");
