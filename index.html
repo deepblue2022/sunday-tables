@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Fantasy League</title>
+<style>
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --ink: #16181d; --muted: #667085; --line: #dfe3ea;
+  --win: #e7f6ec; --win-ink: #0b6b34; --pos: #0b7a3b; --neg: #b42318; --live: #c2410c;
+  --head: #eef1f6; --warn-bg: #fff4e5; --warn-ink: #8a4b00; --err-bg: #fde8e7; --err-ink: #8f1d15;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1216; --card: #171b21; --ink: #e8ebf0; --muted: #98a2b3; --line: #2a303a;
+    --win: #143222; --win-ink: #7ee2a8; --pos: #5fd693; --neg: #ff8b80; --live: #ffa15c;
+    --head: #1d222a; --warn-bg: #3a2a10; --warn-ink: #ffd08a; --err-bg: #3d1614; --err-ink: #ffb4ac;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+main { max-width: 1100px; margin: 0 auto; padding: 12px 12px 40px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+h1 { font-size: 20px; margin: 0; flex: 1 1 auto; }
+h2 { font-size: 16px; margin: 22px 0 8px; }
+h3 { font-size: 13px; margin: 14px 0 6px; color: var(--muted); font-weight: 600; }
+select, button {
+  font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 10px; min-height: 36px;
+}
+button { cursor: pointer; }
+button:disabled { opacity: 0.5; cursor: default; }
+#updated { color: var(--muted); font-size: 13px; }
+#status { color: var(--muted); margin: 0 0 4px; }
+#banner { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+#banner.error { background: var(--err-bg); color: var(--err-ink); }
+#banner p { margin: 2px 0; }
+.table-wrap {
+  overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+.table-wrap.prov { border-style: dashed; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+thead th { background: var(--head); font-size: 12px; font-weight: 600; color: var(--muted); }
+th:first-child { text-align: left; position: sticky; left: 0; z-index: 1; background: var(--card); }
+thead th:first-child { background: var(--head); }
+td.cell { text-align: left; min-width: 104px; }
+.pname { display: block; font-size: 12px; color: var(--muted); }
+.pts { font-weight: 600; font-size: 16px; }
+.tag { margin-left: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); }
+.tag.live { color: var(--live); }
+td.cell.win { background: var(--win); }
+td.cell.win .pts { color: var(--win-ink); }
+tr.win th, tr.win td { background: var(--win); }
+tr.win th:first-child, tr.win .total { color: var(--win-ink); font-weight: 700; }
+td.total { font-weight: 700; font-size: 16px; }
+td.money.pos { color: var(--pos); }
+td.money.neg { color: var(--neg); }
+td.net { font-weight: 700; }
+td.order { color: var(--muted); }
+.note {
+  display: block; font-size: 10px; font-weight: 600; color: var(--live); text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+p .note { display: inline; margin-right: 6px; }
+.pot { margin: 8px 2px 0; font-weight: 600; }
+footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
+body.empty section.week { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1 id="league">Fantasy League</h1>
+    <select id="week" aria-label="Week"></select>
+    <button id="refresh" type="button">Refresh</button>
+    <span id="updated"></span>
+  </header>
+  <div id="banner" role="status" hidden></div>
+  <p id="status">Loading&hellip;</p>
+
+  <section class="week">
+    <h2>Team table</h2>
+    <div id="team"></div>
+  </section>
+  <section class="week">
+    <h2>Lightning table</h2>
+    <div id="lightning"></div>
+  </section>
+  <section class="week">
+    <h2>Week settlement</h2>
+    <div id="settlement"></div>
+  </section>
+  <section>
+    <h2>Accumulated standings</h2>
+    <div id="standings"></div>
+  </section>
+  <footer>Stats from ESPN. Live scores refresh on their own while games are on.</footer>
+</main>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
