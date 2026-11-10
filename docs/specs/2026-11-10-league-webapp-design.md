@@ -196,8 +196,10 @@ of step.
 
 `node --use-system-ca cli/score.mjs <season> <week> --record`:
 1. Fetches the week from ESPN and scores it. Any failed request aborts.
-2. Refuses if the week is not final, is already recorded, or any rostered player's current ESPN team
-   differs from the week file's `team`.
+2. Refuses if the week is not final or is already recorded. Also refuses if a player scored as a zero
+   (did not play, bye) is now on a different ESPN team than the week file's `team`, since that zero may
+   come from looking at the wrong game. A player with a stat line demonstrably played for the team on
+   file, so a later trade only produces a warning.
 3. Prints every DNP and BYE player so the scorekeeper can confirm each zero is real.
 4. Writes every rostered player's points and state into the week file's `recorded`.
 
@@ -244,7 +246,7 @@ name can be changed in `league.json` without touching anything else.
   including leftover cents and the sum-to-zero invariant; every player state, including bye not blocking
   final and unknown/unresolved blocking it; no winner before kickoff; picker default; `resolve` failing on
   unknown and duplicate names (e.g. two players named Justin Jefferson) and ignoring defensive players;
-  `--record` refusing a non-final week, an already-recorded week, and a team mismatch.
+  `--record` refusing a non-final week, an already-recorded week, and a zero for a player whose team has changed.
 - Manual check: open the published page at phone width and desktop, during a live game window if possible.
 
 ## One-time setup

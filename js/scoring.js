@@ -38,6 +38,9 @@ const weekLabel = (weekFile) => `${weekFile?.season}-${weekFile?.week}`;
 // Throws if any league owner is missing from a table or a roster doesn't fit its columns.
 export function validateWeekFile(weekFile, league) {
   const problems = [];
+  if (!Number.isInteger(weekFile?.season) || !Number.isInteger(weekFile?.week)) {
+    problems.push("needs an integer season and week");
+  }
   for (const t of TABLES) {
     const table = weekFile?.[t];
     if (!Array.isArray(table?.columns) || !table.rosters) {
