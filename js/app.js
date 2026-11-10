@@ -55,6 +55,7 @@ let failed = false; // the last load could not finish; try again soon
 const shownHtml = {};
 const sorts = { settlement: null, standings: null }; // column each table is sorted by; null = league order
 let shownProblem = null;
+let thruWeek = null; // week the standings' "Thru Wk" column runs through; null = the latest recorded
 
 // Replace an element's HTML only when it changed, keeping each table's sideways scroll position.
 function setHtml(id, html) {
@@ -101,7 +102,7 @@ function render(dataProblem) {
   setHtml("settlement", week?.result ? renderSettlement(week.result, league, sorts.settlement) : "");
   setHtml(
     "standings",
-    model.standings ? renderStandings(model.standings, league, sorts.standings) : `<p class="pot">Standings cannot be shown: ${esc(model.standingsProblem)}</p>`,
+    model.standings ? renderStandings(model.standings, league, sorts.standings, thruWeek) : `<p class="pot">Standings cannot be shown: ${esc(model.standingsProblem)}</p>`,
   );
   document.body.classList.remove("empty");
   document.body.classList.toggle("noweek", !shown);
@@ -157,6 +158,15 @@ $("week").addEventListener("change", (e) => {
   if (model) render(null);
 });
 $("refresh").addEventListener("click", load);
+// The week picker in the standings header.
+$("standings").addEventListener("change", (e) => {
+  if (!e.target.matches?.("select[data-thru]") || !model) return;
+  const week = Number(e.target.value);
+  // picking the latest week means "follow the latest", so a newly recorded week takes over
+  thruWeek = week === model.standings?.recordedThrough ? null : week;
+  render(shownProblem);
+  $("standings").querySelector("select[data-thru]")?.focus();
+});
 // Clicking a column header in the settlement or standings table sorts by that column.
 for (const id of Object.keys(sorts)) {
   $(id).addEventListener("click", (e) => {

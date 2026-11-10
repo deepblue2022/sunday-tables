@@ -163,6 +163,8 @@ export function standings(baseline, weeks, league) {
   const base = Object.fromEntries(owners.map((o) => [o, Math.round(baseline.totals[o] * 100)]));
   let recordedThrough = baseline.through_week;
   const open = [];
+  // Running totals after the baseline and after each recorded week, in week order.
+  const history = [{ week: baseline.through_week, totals: { ...base } }];
   for (const w of [...weeks].sort(byWeek)) {
     const amounts = w.settlement ? Object.fromEntries(owners.map((o) => [o, w.settlement[o].total])) : null;
     if (!w.recorded) {
@@ -175,12 +177,13 @@ export function standings(baseline, weeks, league) {
     if (!amounts) throw new Error(`week ${w.week} is recorded but has no settlement`);
     for (const o of owners) base[o] += amounts[o];
     recordedThrough = Math.max(recordedThrough, w.week);
+    history.push({ week: w.week, totals: { ...base } });
   }
   const totals = { ...base };
   for (const w of open) if (w.amounts) for (const o of owners) totals[o] += w.amounts[o];
   const ranked = [...owners].sort((a, b) => totals[a] - totals[b] || owners.indexOf(a) - owners.indexOf(b));
   const order = Object.fromEntries(owners.map((o) => [o, ranked.indexOf(o) + 1]));
-  return { recordedThrough, base, open, totals, order };
+  return { recordedThrough, base, open, totals, order, history };
 }
 
 // The week the page opens on: the earliest unrecorded week with a game started, else the last week.

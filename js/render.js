@@ -133,17 +133,35 @@ export function renderSettlement(result, league, sort = null) {
   return `${wrap(`<table class="grid"><thead>${head}</thead><tbody>\n${rows}\n</tbody></table>`, !result.final)}${label}`;
 }
 
-export function renderStandings(standings, league, sort = null) {
+// `thruWeek` picks which recorded week the "Thru Wk" column runs through (default: the latest).
+export function renderStandings(standings, league, sort = null, thruWeek = null) {
   const open = standings.open;
+  const history = standings.history ?? [];
+  const picked = history.find((h) => h.week === thruWeek) ?? null;
+  const thru = picked ?? { week: standings.recordedThrough, totals: standings.base };
+  // With more than one recorded point to choose from, the header is a week picker plus a sort button.
+  const thruHead = () => {
+    if (history.length < 2) return sortHead("base", `Thru Wk ${esc(thru.week)}`, sort);
+    const on = sort?.key === "base";
+    const aria = on ? ` aria-sort="${sort.dir === "asc" ? "ascending" : "descending"}"` : "";
+    const options = history
+      .map((h) => `<option value="${esc(h.week)}"${h.week === thru.week ? " selected" : ""}>Thru Wk ${esc(h.week)}</option>`)
+      .join("");
+    const arrow = on ? (sort.dir === "asc" ? "▲" : "▼") : "⇅";
+    return (
+      `<th${aria}><select class="thru" data-thru aria-label="Standings through week">${options}</select>` +
+      `<button type="button" class="sort inline" data-sort="base" aria-label="Sort by this column">${arrow}</button></th>`
+    );
+  };
   const weekKey = (w) => `wk-${w.week}`;
   const weekHead = (w) =>
     sortHead(weekKey(w), `Wk ${esc(w.week)}${w.amounts ? (w.provisional ? note("provisional") : "") : note("not loaded")}`, sort);
   const head =
-    `<tr>${sortHead("team", "Team", sort)}${sortHead("base", `Thru Wk ${esc(standings.recordedThrough)}`, sort)}` +
+    `<tr>${sortHead("team", "Team", sort)}${thruHead()}` +
     `${open.map(weekHead).join("")}${sortHead("total", "Total", sort)}${sortHead("order", "Order", sort)}</tr>`;
   const value = (o) => {
     if (sort.key === "team") return o.display;
-    if (sort.key === "base") return standings.base[o.key];
+    if (sort.key === "base") return thru.totals[o.key];
     if (sort.key === "total") return standings.totals[o.key];
     if (sort.key === "order") return standings.order[o.key];
     return open.find((w) => weekKey(w) === sort.key)?.amounts?.[o.key];
@@ -152,7 +170,7 @@ export function renderStandings(standings, league, sort = null) {
     .map((o) => {
       const weeks = open.map((w) => (w.amounts ? moneyCell(w.amounts[o.key]) : `<td class="money">${DASH}</td>`)).join("");
       const total = moneyCell(standings.totals[o.key], "net ");
-      return `<tr>${rowHead(o)}${moneyCell(standings.base[o.key])}${weeks}${total}<td class="order">${standings.order[o.key]}</td></tr>`;
+      return `<tr>${rowHead(o)}${moneyCell(thru.totals[o.key])}${weeks}${total}<td class="order">${standings.order[o.key]}</td></tr>`;
     })
     .join("\n");
   const table = `<table class="grid standings"><thead>${head}</thead><tbody>\n${rows}\n</tbody></table>`;
