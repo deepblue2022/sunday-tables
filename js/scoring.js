@@ -132,3 +132,31 @@ export function scoreWeek(weekFile, playersById, league) {
   const final = !team.provisional && columns.every((c) => !c.provisional);
   return { final, team, lightning: { columns, net }, settlement };
 }
+
+// Accumulated standings: baseline (whole dollars) + recorded weeks, with unrecorded weeks as open columns.
+export function standings(baseline, weeks, league) {
+  const owners = league.owners.map((o) => o.key);
+  const base = Object.fromEntries(owners.map((o) => [o, Math.round((baseline.totals[o] ?? 0) * 100)]));
+  let recordedThrough = baseline.through_week;
+  const open = [];
+  for (const w of weeks) {
+    const amounts = w.settlement ? Object.fromEntries(owners.map((o) => [o, w.settlement[o].total])) : null;
+    if (w.recorded) {
+      for (const o of owners) base[o] += amounts[o];
+      recordedThrough = Math.max(recordedThrough, w.week);
+    } else {
+      open.push({ week: w.week, provisional: !w.final, amounts });
+    }
+  }
+  const totals = { ...base };
+  for (const w of open) if (w.amounts) for (const o of owners) totals[o] += w.amounts[o];
+  const ranked = [...owners].sort((a, b) => totals[a] - totals[b] || owners.indexOf(a) - owners.indexOf(b));
+  const order = Object.fromEntries(owners.map((o) => [o, ranked.indexOf(o) + 1]));
+  return { recordedThrough, base, open, totals, order };
+}
+
+// The week the page opens on: the earliest unrecorded week with a game started, else the last week.
+export function defaultWeek(weeks) {
+  const live = weeks.find((w) => !w.recorded && w.started);
+  return (live ?? weeks[weeks.length - 1]).week;
+}
