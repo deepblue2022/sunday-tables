@@ -28,3 +28,91 @@ export function splitCents(totalCents, winners, ownerOrder) {
   for (const o of ordered) out[o] = share + (left-- > 0 ? 1 : 0);
   return out;
 }
+
+const TABLES = ["team_table", "lightning_table"];
+const weekLabel = (weekFile) => `${weekFile?.season}-${weekFile?.week}`;
+
+// Throws if any league owner is missing from a table or a roster doesn't fit its columns.
+export function validateWeekFile(weekFile, league) {
+  const problems = [];
+  for (const t of TABLES) {
+    const table = weekFile?.[t];
+    if (!Array.isArray(table?.columns) || !table.rosters) {
+      problems.push(`${t} is missing`);
+      continue;
+    }
+    for (const { key } of league.owners) {
+      const roster = table.rosters[key];
+      if (!Array.isArray(roster)) problems.push(`${t}: no roster for ${key}`);
+      else if (roster.length !== table.columns.length) {
+        problems.push(`${t}: ${key} has ${roster.length} players for ${table.columns.length} columns`);
+      }
+    }
+  }
+  if (problems.length) throw new Error(`Week file ${weekLabel(weekFile)}: ${problems.join("; ")}`);
+}
+
+const zeroMoney = (owners) => Object.fromEntries(owners.map((o) => [o, 0]));
+
+// One contest (the team table or a lightning column): who has the top score, and its status.
+function contest(pointsByOwner, cellsByOwner, owners) {
+  const cells = owners.flatMap((o) => cellsByOwner[o]);
+  const started = cells.some((c) => c.state !== "not_started");
+  const provisional = cells.some((c) => BLOCKING.includes(c.state));
+  const top = Math.max(...owners.map((o) => pointsByOwner[o]));
+  const winners = started ? owners.filter((o) => pointsByOwner[o] === top) : [];
+  return { started, provisional, winners, top };
+}
+
+export function scoreWeek(weekFile, playersById, league) {
+  validateWeekFile(weekFile, league);
+  const owners = league.owners.map((o) => o.key);
+  const cell = (p) => {
+    const r = playersById[p.id] ?? { points: 0, state: "unknown" };
+    return { name: p.name, id: p.id, points: r.points, state: r.state };
+  };
+
+  // Team table: highest total takes the pot.
+  const rows = {};
+  for (const o of owners) {
+    const players = weekFile.team_table.rosters[o].map(cell);
+    rows[o] = { players, total: players.reduce((a, c) => a + c.points, 0) };
+  }
+  const teamPoints = Object.fromEntries(owners.map((o) => [o, rows[o].total]));
+  const teamCells = Object.fromEntries(owners.map((o) => [o, rows[o].players]));
+  const t = contest(teamPoints, teamCells, owners);
+  const teamMoney = zeroMoney(owners);
+  if (t.started) {
+    for (const o of owners) teamMoney[o] = -league.teamBuyInCents;
+    const shares = splitCents(league.teamBuyInCents * owners.length, t.winners, owners);
+    for (const o of t.winners) teamMoney[o] += shares[o];
+  }
+  const team = { rows, winners: t.winners, started: t.started, provisional: t.provisional, money: teamMoney };
+
+  // Lightning table: every column is its own contest.
+  const net = zeroMoney(owners);
+  const columns = weekFile.lightning_table.columns.map((name, i) => {
+    const cells = Object.fromEntries(owners.map((o) => [o, cell(weekFile.lightning_table.rosters[o][i])]));
+    const points = Object.fromEntries(owners.map((o) => [o, cells[o].points]));
+    const c = contest(points, Object.fromEntries(owners.map((o) => [o, [cells[o]]])), owners);
+    const money = zeroMoney(owners);
+    if (c.started) {
+      let pot = 0;
+      for (const o of owners) {
+        const owed = (c.top - points[o]) * league.lightningCentsPerPoint;
+        money[o] = -owed;
+        pot += owed;
+      }
+      const shares = splitCents(pot, c.winners, owners);
+      for (const o of c.winners) money[o] += shares[o];
+    }
+    for (const o of owners) net[o] += money[o];
+    return { name, cells, winners: c.winners, started: c.started, provisional: c.provisional, money };
+  });
+
+  const settlement = Object.fromEntries(
+    owners.map((o) => [o, { lightning: net[o], teamPot: teamMoney[o], total: net[o] + teamMoney[o] }]),
+  );
+  const final = !team.provisional && columns.every((c) => !c.provisional);
+  return { final, team, lightning: { columns, net }, settlement };
+}
