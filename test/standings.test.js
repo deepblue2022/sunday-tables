@@ -56,3 +56,48 @@ test("defaultWeek picks the earliest unrecorded week that has started, else the 
   assert.equal(defaultWeek([{ week: 9, recorded: true, started: true }, { week: 10, recorded: false, started: true }]), 10);
   assert.equal(defaultWeek([{ week: 9, recorded: true, started: true }]), 9);
 });
+
+// --- added after Task 3 review ---
+
+test("order is ranked on totals including open weeks", () => {
+  const flat = { through_week: 8, totals: { Art: 10, Mxue: 20, Vince: 30, Kevin: 40, Galli: 50, JD: 60, JohnO: 70 } };
+  const swing = { Art: 10000, Mxue: 0, Vince: 0, Kevin: 0, Galli: 0, JD: 0, JohnO: -10000 };
+  const s = standings(flat, [{ week: 9, recorded: false, final: false, settlement: settle(swing) }], league);
+  assert.deepEqual(s.order, { JohnO: 1, Mxue: 2, Vince: 3, Kevin: 4, Galli: 5, JD: 6, Art: 7 });
+});
+
+test("two open weeks both count, listed in week order whatever order they arrive in", () => {
+  const a = { Art: 100, Mxue: -100, Vince: 0, Kevin: 0, Galli: 0, JD: 0, JohnO: 0 };
+  const b = { Art: 0, Mxue: 0, Vince: 300, Kevin: -300, Galli: 0, JD: 0, JohnO: 0 };
+  const flat = { through_week: 8, totals: Object.fromEntries(OWNERS.map((o) => [o, 0])) };
+  const s = standings(
+    flat,
+    [
+      { week: 10, recorded: false, final: false, settlement: settle(b) },
+      { week: 9, recorded: false, final: true, settlement: settle(a) },
+    ],
+    league,
+  );
+  assert.deepEqual(s.open.map((w) => w.week), [9, 10]);
+  assert.deepEqual(s.totals, { Art: 100, Mxue: -100, Vince: 300, Kevin: -300, Galli: 0, JD: 0, JohnO: 0 });
+});
+
+test("standings reject a baseline whose owners differ from the league", () => {
+  const renamed = { through_week: 8, totals: { ...baseline.totals } };
+  renamed.totals.JohnD = renamed.totals.JD;
+  delete renamed.totals.JD;
+  assert.throws(() => standings(renamed, [], league), /baseline.*JD/);
+  assert.throws(() => standings({ through_week: 8, totals: { Art: 5 } }, [], league), /baseline/);
+});
+
+test("standings reject a recorded week the baseline already covers, or one with no settlement", () => {
+  assert.throws(() => standings(baseline, [{ week: 8, recorded: true, final: true, settlement: settle(wk9) }], league), /week 8/);
+  assert.throws(() => standings(baseline, [{ week: 9, recorded: true, final: true, settlement: null }], league), /week 9/);
+});
+
+test("defaultWeek takes the earliest of several started weeks, sorts by week, and returns null for no weeks", () => {
+  assert.equal(defaultWeek([{ week: 9, recorded: false, started: true }, { week: 10, recorded: false, started: true }]), 9);
+  assert.equal(defaultWeek([{ week: 11, recorded: false, started: true }, { week: 10, recorded: false, started: true }, { week: 9, recorded: true, started: true }]), 10);
+  assert.equal(defaultWeek([{ week: 11, recorded: true, started: true }, { week: 9, recorded: true, started: true }]), 11);
+  assert.equal(defaultWeek([]), null);
+});

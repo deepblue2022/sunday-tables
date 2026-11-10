@@ -133,20 +133,30 @@ export function scoreWeek(weekFile, playersById, league) {
   return { final, team, lightning: { columns, net }, settlement };
 }
 
+const byWeek = (a, b) => a.week - b.week;
+
 // Accumulated standings: baseline (whole dollars) + recorded weeks, with unrecorded weeks as open columns.
 export function standings(baseline, weeks, league) {
   const owners = league.owners.map((o) => o.key);
-  const base = Object.fromEntries(owners.map((o) => [o, Math.round((baseline.totals[o] ?? 0) * 100)]));
+  const keys = Object.keys(baseline.totals ?? {});
+  const wrong = [...owners.filter((o) => !keys.includes(o)), ...keys.filter((k) => !owners.includes(k))];
+  if (wrong.length) throw new Error(`baseline.json: owners do not match the league (${wrong.join(", ")})`);
+
+  const base = Object.fromEntries(owners.map((o) => [o, Math.round(baseline.totals[o] * 100)]));
   let recordedThrough = baseline.through_week;
   const open = [];
-  for (const w of weeks) {
+  for (const w of [...weeks].sort(byWeek)) {
     const amounts = w.settlement ? Object.fromEntries(owners.map((o) => [o, w.settlement[o].total])) : null;
-    if (w.recorded) {
-      for (const o of owners) base[o] += amounts[o];
-      recordedThrough = Math.max(recordedThrough, w.week);
-    } else {
+    if (!w.recorded) {
       open.push({ week: w.week, provisional: !w.final, amounts });
+      continue;
     }
+    if (w.week <= baseline.through_week) {
+      throw new Error(`week ${w.week} is recorded but the baseline already runs through week ${baseline.through_week}`);
+    }
+    if (!amounts) throw new Error(`week ${w.week} is recorded but has no settlement`);
+    for (const o of owners) base[o] += amounts[o];
+    recordedThrough = Math.max(recordedThrough, w.week);
   }
   const totals = { ...base };
   for (const w of open) if (w.amounts) for (const o of owners) totals[o] += w.amounts[o];
@@ -156,7 +166,9 @@ export function standings(baseline, weeks, league) {
 }
 
 // The week the page opens on: the earliest unrecorded week with a game started, else the last week.
+// Returns null when there are no weeks.
 export function defaultWeek(weeks) {
-  const live = weeks.find((w) => !w.recorded && w.started);
-  return (live ?? weeks[weeks.length - 1]).week;
+  const sorted = [...weeks].sort(byWeek);
+  const live = sorted.find((w) => !w.recorded && w.started);
+  return (live ?? sorted[sorted.length - 1])?.week ?? null;
 }
