@@ -94,7 +94,7 @@ result = {
 }
 ```
 
-`started` = at least one player in that table/column is not `not_started`. `provisional` = any player in it is BLOCKING. `winners` is `[]` when `started` is false. Points of BLOCKING players count as their current `points` (0 when not started/unknown). Team money: each owner −buy-in, winners share the pot via `splitCents`. Lightning column money: each non-winner pays `(top − pts) × rate`; winners share the sum via `splitCents`.
+`started` = at least one player in that table/column is `live`, `final` or `dnp` (their game has kicked off; `bye` and `unknown` do not count). `provisional` = any player in it is BLOCKING. `winners` is `[]` when `started` is false. Points of BLOCKING players count as their current `points` (0 when not started/unknown). Team money: each owner −buy-in, winners share the pot via `splitCents`. Lightning column money: each non-winner pays `(top − pts) × rate`; winners share the sum via `splitCents`.
 
 - Also produces: `validateWeekFile(weekFile, league)` — throws `Error` whose message includes `"<season>-<week>"` and what is wrong, if any owner in `league.owners` is missing from either table or a roster's length differs from its `columns` length. `scoreWeek` calls it first.
 

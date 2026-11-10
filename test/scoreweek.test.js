@@ -113,3 +113,96 @@ test("validateWeekFile names the week when an owner is missing", () => {
   delete weekFile.lightning_table.rosters.JD;
   assert.throws(() => validateWeekFile(weekFile, league), /2026-9.*JD/);
 });
+
+// --- added after Task 2 review ---
+
+test("mixed column: one final player, the rest not started", () => {
+  const states = {};
+  for (const o of OWNERS) if (o !== "Art") states[`L-${o}-1`] = "not_started";
+  const { weekFile, playersById } = build({}, column(1, { Art: 5, Mxue: 0, Vince: 0, Kevin: 0, Galli: 0, JD: 0, JohnO: 0 }), states);
+  const col = scoreWeek(weekFile, playersById, league).lightning.columns[1];
+  assert.equal(col.started, true);
+  assert.equal(col.provisional, true);
+  assert.deepEqual(col.winners, ["Art"]);
+  assert.deepEqual(col.money, { Art: 6000, Mxue: -1000, Vince: -1000, Kevin: -1000, Galli: -1000, JD: -1000, JohnO: -1000 });
+});
+
+test("started needs a game under way: bye and unknown players do not start a table", () => {
+  const states = { ...allStates("not_started", "T"), ...allStates("not_started", "L"), "T-Art-0": "bye", "T-JD-3": "unknown", "L-Art-0": "bye" };
+  const { weekFile, playersById } = build({}, {}, states);
+  const r = scoreWeek(weekFile, playersById, league);
+  assert.equal(r.team.started, false);
+  assert.deepEqual(r.team.winners, []);
+  assert.equal(r.lightning.columns[0].started, false);
+  assert.deepEqual(r.lightning.columns[0].winners, []);
+});
+
+test("nothing started: no money even when points are on the board", () => {
+  const states = { ...allStates("not_started", "T"), ...allStates("not_started", "L") };
+  const { weekFile, playersById } = build({ Art: [9, 9, 9, 9, 9] }, column(0, { Art: 7, Mxue: 0, Vince: 0, Kevin: 0, Galli: 0, JD: 0, JohnO: 0 }), states);
+  const r = scoreWeek(weekFile, playersById, league);
+  for (const o of OWNERS) {
+    assert.equal(r.team.money[o], 0);
+    assert.equal(r.lightning.columns[0].money[o], 0);
+  }
+});
+
+test("a blocking player in any team slot makes the team table provisional", () => {
+  const { weekFile, playersById } = build({}, {}, { "T-Kevin-4": "live" });
+  const r = scoreWeek(weekFile, playersById, league);
+  assert.equal(r.team.provisional, true);
+  assert.equal(r.team.started, true);
+  assert.equal(r.final, false);
+});
+
+test("a column that has not started keeps the week from being final", () => {
+  const states = {};
+  for (const o of OWNERS) states[`L-${o}-6`] = "not_started";
+  const { weekFile, playersById } = build({}, {}, states);
+  assert.equal(scoreWeek(weekFile, playersById, league).final, false);
+});
+
+test("team pot: two-way tie; seven-way tie pays nobody", () => {
+  const t = [20, 20, 20, 20, 20];
+  let { weekFile, playersById } = build({ Mxue: t, JD: t }, {});
+  assert.deepEqual(scoreWeek(weekFile, playersById, league).team.money, { Art: -2000, Mxue: 5000, Vince: -2000, Kevin: -2000, Galli: -2000, JD: 5000, JohnO: -2000 });
+  ({ weekFile, playersById } = build({}, {}));
+  const r = scoreWeek(weekFile, playersById, league);
+  assert.deepEqual(r.team.winners, OWNERS);
+  for (const o of OWNERS) assert.equal(r.team.money[o], 0);
+});
+
+test("result has exactly the documented shape", () => {
+  const { weekFile, playersById } = build();
+  const r = scoreWeek(weekFile, playersById, league);
+  assert.deepEqual(Object.keys(r).sort(), ["final", "lightning", "settlement", "team"]);
+  assert.deepEqual(Object.keys(r.team).sort(), ["money", "provisional", "rows", "started", "winners"]);
+  assert.deepEqual(Object.keys(r.lightning).sort(), ["columns", "net"]);
+  assert.equal(r.lightning.columns.length, 7);
+  assert.deepEqual(Object.keys(r.lightning.columns[0]).sort(), ["cells", "money", "name", "provisional", "started", "winners"]);
+});
+
+for (const t of ["team_table", "lightning_table"]) {
+  test(`validateWeekFile checks ${t}: short, long, missing and extra owners, bad entries`, () => {
+    const bad = (mutate, pattern) => {
+      const { weekFile } = build();
+      mutate(weekFile[t].rosters);
+      assert.throws(() => validateWeekFile(weekFile, league), pattern);
+    };
+    bad((r) => r.Vince.pop(), /2026-9.*Vince/);
+    bad((r) => r.Vince.push({ name: "X", id: "x", team: "AAA" }), /2026-9.*Vince/);
+    bad((r) => delete r.Kevin, /2026-9.*Kevin/);
+    bad((r) => (r.Mike = r.Galli), /2026-9.*Mike/);
+    bad((r) => (r.Art[0] = "Josh Allen"), /2026-9.*Art/);
+    bad((r) => (r.Art[1] = null), /2026-9.*Art/);
+    bad((r) => (r.Art[2] = { name: "No Id", team: "AAA" }), /2026-9.*Art/);
+  });
+}
+
+test("scoreWeek names the week and player when points are not an integer", () => {
+  const { weekFile, playersById } = build();
+  playersById["T-Art-0"] = { points: "9", state: "final" };
+  assert.throws(() => scoreWeek(weekFile, playersById, league), /2026-9.*Art T0/);
+  playersById["T-Art-0"] = { state: "final" };
+  assert.throws(() => scoreWeek(weekFile, playersById, league), /2026-9.*Art T0/);
+});

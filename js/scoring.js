@@ -1,6 +1,8 @@
 // Pure scoring engine: no I/O. Runs in the browser and in Node. All money is integer cents.
 
 export const BLOCKING = ["live", "not_started", "unknown"];
+// States that mean a player's game has kicked off (bye and unknown do not start a contest).
+const STARTED = ["live", "final", "dnp"];
 
 const num = (v) => {
   const n = Number(v);
@@ -30,6 +32,7 @@ export function splitCents(totalCents, winners, ownerOrder) {
 }
 
 const TABLES = ["team_table", "lightning_table"];
+const isText = (v) => typeof v === "string" && v !== "";
 const weekLabel = (weekFile) => `${weekFile?.season}-${weekFile?.week}`;
 
 // Throws if any league owner is missing from a table or a roster doesn't fit its columns.
@@ -41,11 +44,21 @@ export function validateWeekFile(weekFile, league) {
       problems.push(`${t} is missing`);
       continue;
     }
-    for (const { key } of league.owners) {
+    const keys = league.owners.map((o) => o.key);
+    for (const extra of Object.keys(table.rosters).filter((k) => !keys.includes(k))) {
+      problems.push(`${t}: ${extra} is not a league owner`);
+    }
+    for (const key of keys) {
       const roster = table.rosters[key];
       if (!Array.isArray(roster)) problems.push(`${t}: no roster for ${key}`);
       else if (roster.length !== table.columns.length) {
         problems.push(`${t}: ${key} has ${roster.length} players for ${table.columns.length} columns`);
+      } else {
+        roster.forEach((p, i) => {
+          if (!isText(p?.id) || !isText(p?.name)) {
+            problems.push(`${t}: ${key} ${table.columns[i]} is not a resolved player (needs name and id)`);
+          }
+        });
       }
     }
   }
@@ -57,7 +70,7 @@ const zeroMoney = (owners) => Object.fromEntries(owners.map((o) => [o, 0]));
 // One contest (the team table or a lightning column): who has the top score, and its status.
 function contest(pointsByOwner, cellsByOwner, owners) {
   const cells = owners.flatMap((o) => cellsByOwner[o]);
-  const started = cells.some((c) => c.state !== "not_started");
+  const started = cells.some((c) => STARTED.includes(c.state));
   const provisional = cells.some((c) => BLOCKING.includes(c.state));
   const top = Math.max(...owners.map((o) => pointsByOwner[o]));
   const winners = started ? owners.filter((o) => pointsByOwner[o] === top) : [];
@@ -69,6 +82,9 @@ export function scoreWeek(weekFile, playersById, league) {
   const owners = league.owners.map((o) => o.key);
   const cell = (p) => {
     const r = playersById[p.id] ?? { points: 0, state: "unknown" };
+    if (!Number.isInteger(r.points)) {
+      throw new Error(`Week file ${weekLabel(weekFile)}: bad points for ${p.name} (${r.points})`);
+    }
     return { name: p.name, id: p.id, points: r.points, state: r.state };
   };
 
