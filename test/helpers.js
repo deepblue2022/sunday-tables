@@ -42,3 +42,44 @@ export function column(index, byOwner) {
   }
   return out;
 }
+
+// --- Week 9 2026 fixtures ---
+import { readFileSync, readdirSync } from "node:fs";
+
+const FIX = new URL("./fixtures/", import.meta.url);
+export const fixture = (name) => JSON.parse(readFileSync(new URL(name, FIX)));
+
+// Raw game fixtures for Week 9, keyed by event id.
+export function week9RawGames() {
+  const out = {};
+  for (const f of readdirSync(new URL("2026-09/", FIX))) {
+    const m = f.match(/^game-(\d+)\.json$/);
+    if (m) out[m[1]] = fixture(`2026-09/${f}`);
+  }
+  return out;
+}
+
+// The Week 9 draft with each name given the id and team found in the fixture box scores,
+// so tests stay off the network (the real resolver is cli/lib.mjs).
+export function week9WeekFile() {
+  const found = {};
+  for (const raw of Object.values(week9RawGames())) {
+    for (const t of raw.boxscore.players) {
+      for (const s of t.statistics) {
+        for (const a of s.athletes) {
+          (found[a.athlete.displayName] ??= new Map()).set(a.athlete.id, t.team.abbreviation);
+        }
+      }
+    }
+  }
+  const draft = fixture("2026-09/week-draft.json");
+  const resolve = (name) => {
+    const hits = [...(found[name] ?? [])];
+    if (hits.length !== 1) throw new Error(`fixture lookup for ${name}: ${hits.length} matches`);
+    return { name, id: hits[0][0], team: hits[0][1] };
+  };
+  for (const t of ["team_table", "lightning_table"]) {
+    for (const o of Object.keys(draft[t].rosters)) draft[t].rosters[o] = draft[t].rosters[o].map(resolve);
+  }
+  return draft;
+}

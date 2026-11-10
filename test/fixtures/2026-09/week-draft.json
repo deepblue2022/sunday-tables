@@ -1,0 +1,140 @@
+{
+ "season": 2026,
+ "week": 9,
+ "team_table": {
+  "columns": [
+   "QB",
+   "RB",
+   "RB",
+   "WR",
+   "WR"
+  ],
+  "rosters": {
+   "Art": [
+    "Josh Allen",
+    "Jahmyr Gibbs",
+    "Christian McCaffrey",
+    "Jaxon Smith-Njigba",
+    "Ja'Marr Chase"
+   ],
+   "Mxue": [
+    "Joe Burrow",
+    "Jahmyr Gibbs",
+    "Christian McCaffrey",
+    "Puka Nacua",
+    "Ja'Marr Chase"
+   ],
+   "Vince": [
+    "Brock Purdy",
+    "Jahmyr Gibbs",
+    "Bijan Robinson",
+    "Ja'Marr Chase",
+    "CeeDee Lamb"
+   ],
+   "Kevin": [
+    "Joe Burrow",
+    "Kenneth Walker III",
+    "Christian McCaffrey",
+    "Jaxon Smith-Njigba",
+    "Ja'Marr Chase"
+   ],
+   "Galli": [
+    "Josh Allen",
+    "Kenneth Walker III",
+    "Bijan Robinson",
+    "Puka Nacua",
+    "CeeDee Lamb"
+   ],
+   "JD": [
+    "Brock Purdy",
+    "Jahmyr Gibbs",
+    "Christian McCaffrey",
+    "Jaxon Smith-Njigba",
+    "Puka Nacua"
+   ],
+   "JohnO": [
+    "Joe Burrow",
+    "Kenneth Walker III",
+    "Javonte Williams",
+    "Jaxon Smith-Njigba",
+    "Puka Nacua"
+   ]
+  }
+ },
+ "lightning_table": {
+  "columns": [
+   "RB2",
+   "QB2",
+   "QB3",
+   "QB4",
+   "WR2",
+   "WR3",
+   "RB3"
+  ],
+  "rosters": {
+   "Art": [
+    "James Cook III",
+    "Matthew Stafford",
+    "Bo Nix",
+    "Daniel Jones",
+    "George Kittle",
+    "Nico Collins",
+    "Jonah Coleman"
+   ],
+   "Mxue": [
+    "Bucky Irving",
+    "Drake Maye",
+    "Tyler Shough",
+    "Geno Smith",
+    "Brock Bowers",
+    "Christian Watson",
+    "Rhamondre Stevenson"
+   ],
+   "Vince": [
+    "Chuba Hubbard",
+    "Dak Prescott",
+    "Jayden Daniels",
+    "Carson Wentz",
+    "Malik Nabers",
+    "Parker Washington",
+    "Quinshon Judkins"
+   ],
+   "Kevin": [
+    "Kyren Williams",
+    "Jared Goff",
+    "Jordan Love",
+    "Michael Penix Jr.",
+    "Drake London",
+    "Matthew Golden",
+    "Derrick Henry"
+   ],
+   "Galli": [
+    "D'Andre Swift",
+    "Caleb Williams",
+    "Malik Willis",
+    "Bryce Young",
+    "Chris Olave",
+    "Tetairoa McMillan",
+    "Ollie Gordon II"
+   ],
+   "JD": [
+    "Jonathan Taylor",
+    "Trevor Lawrence",
+    "C.J. Stroud",
+    "J.J. McCarthy",
+    "Amon-Ra St. Brown",
+    "Jameson Williams",
+    "Bhayshul Tuten"
+   ],
+   "JohnO": [
+    "Chase Brown",
+    "Patrick Mahomes",
+    "Kirk Cousins",
+    "Baker Mayfield",
+    "Tee Higgins",
+    "Justin Jefferson",
+    "Josh Jacobs"
+   ]
+  }
+ }
+}

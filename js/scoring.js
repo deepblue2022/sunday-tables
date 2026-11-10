@@ -172,3 +172,38 @@ export function defaultWeek(weeks) {
   const live = sorted.find((w) => !w.recorded && w.started);
   return (live ?? sorted[sorted.length - 1])?.week ?? null;
 }
+
+const rostered = (weekFile) => TABLES.flatMap((t) => Object.values(weekFile[t].rosters).flat());
+
+// Games that contain at least one rostered player's team.
+export function relevantGames(weekFile, scoreboard) {
+  const teams = new Set(rostered(weekFile).map((p) => p.team));
+  return scoreboard.games.filter((g) => g.teams.some((t) => teams.has(t)));
+}
+
+// Points and state for every rostered player, from the scoreboard and whichever game summaries
+// are loaded (gamesById[id] is a parsed game, or absent/null when it could not be loaded).
+export function derivePlayers(weekFile, scoreboard, gamesById) {
+  const out = {};
+  for (const p of rostered(weekFile)) {
+    const game = scoreboard.games.find((g) => g.teams.includes(p.team));
+    let state = "unknown";
+    let points = 0;
+    if (!game) {
+      if (scoreboard.byeTeams.includes(p.team)) state = "bye";
+    } else if (game.phase === "pre") {
+      state = "not_started";
+    } else if (game.phase === "in" || game.phase === "done") {
+      const summary = gamesById[game.id];
+      if (summary) {
+        const line = summary.stats[p.id];
+        const twoPt = summary.twoPt.filter((t) => t.name === p.name && t.team === p.team);
+        points = playerPoints(line, twoPt.reduce((a, t) => a + t.points, 0));
+        if (game.phase === "in") state = "live";
+        else state = line || twoPt.length ? "final" : "dnp";
+      }
+    }
+    out[p.id] = { points, state };
+  }
+  return out;
+}

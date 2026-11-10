@@ -1,6 +1,8 @@
 // The only code that knows ESPN's response shapes. Every fetch goes through an injected
 // fetchFn(url) that resolves to parsed JSON and rejects on a failed request.
 
+import { relevantGames } from "./scoring.js";
+
 export const API = "https://site.api.espn.com/apis/site/v2/sports/football/nfl";
 
 function phaseOf(type) {
@@ -95,4 +97,31 @@ export function nextPollMs(games) {
   if (games.some((g) => g.phase === "in")) return 60000;
   if (games.some((g) => g.phase === "pre")) return 300000;
   return null;
+}
+
+// Load everything needed to score an unrecorded week. Fetches the scoreboard (a failure rejects),
+// then the summary of every relevant game that is in progress or finished. A finished game's
+// summary is kept in `cache` only when it was fetched after the game finished, so the last plays
+// are never missed; a failed game is left out of gamesById and reported in errors.
+export async function loadLive(weekFile, fetchFn, cache = new Map()) {
+  const scoreboard = await fetchScoreboard(weekFile.season, weekFile.week, fetchFn);
+  const gamesById = {};
+  const errors = [];
+  const wanted = relevantGames(weekFile, scoreboard).filter((g) => g.phase === "in" || g.phase === "done");
+  await Promise.all(
+    wanted.map(async (g) => {
+      if (cache.has(g.id)) {
+        gamesById[g.id] = cache.get(g.id);
+        return;
+      }
+      try {
+        const summary = await fetchGame(g.id, fetchFn);
+        gamesById[g.id] = summary;
+        if (g.phase === "done") cache.set(g.id, summary);
+      } catch (err) {
+        errors.push(`${g.teams.join(" v ")} (game ${g.id}): ${err.message}`);
+      }
+    }),
+  );
+  return { scoreboard, gamesById, errors };
 }
