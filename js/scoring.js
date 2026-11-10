@@ -3,6 +3,7 @@
 export const BLOCKING = ["live", "not_started", "unknown"];
 // States that mean a player's game has kicked off (bye and unknown do not start a contest).
 const STARTED = ["live", "final", "dnp"];
+const STATES = ["final", "dnp", "bye", "live", "not_started", "unknown"];
 
 const num = (v) => {
   const n = Number(v);
@@ -98,6 +99,9 @@ export function scoreWeek(weekFile, playersById, league) {
     const r = playersById[p.id] ?? { points: 0, state: "unknown" };
     if (!Number.isInteger(r.points)) {
       throw new Error(`Week file ${weekLabel(weekFile)}: bad points for ${p.name} (${r.points})`);
+    }
+    if (!STATES.includes(r.state)) {
+      throw new Error(`Week file ${weekLabel(weekFile)}: unknown state for ${p.name}`);
     }
     return { name: p.name, id: p.id, points: r.points, state: r.state };
   };

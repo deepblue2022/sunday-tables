@@ -7,7 +7,8 @@
 <title>Fantasy League</title>
 <style>
 :root {
-  --bg: #f6f7f9; --card: #ffffff; --ink: #16181d; --muted: #667085; --line: #dfe3ea;
+  color-scheme: light dark;
+  --bg: #f6f7f9; --card: #ffffff; --ink: #16181d; --muted: #566074; --line: #dfe3ea;
   --win: #e7f6ec; --win-ink: #0b6b34; --pos: #0b7a3b; --neg: #b42318; --live: #c2410c;
   --head: #eef1f6; --warn-bg: #fff4e5; --warn-ink: #8a4b00; --err-bg: #fde8e7; --err-ink: #8f1d15;
 }
@@ -31,7 +32,7 @@ h1 { font-size: 20px; margin: 0; flex: 1 1 auto; }
 h2 { font-size: 16px; margin: 22px 0 8px; }
 h3 { font-size: 13px; margin: 14px 0 6px; color: var(--muted); font-weight: 600; }
 select, button {
-  font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line);
+  font: inherit; font-size: 16px; color: inherit; background: var(--card); border: 1px solid var(--line);
   border-radius: 8px; padding: 6px 10px; min-height: 36px;
 }
 button { cursor: pointer; }
@@ -45,8 +46,8 @@ button:disabled { opacity: 0.5; cursor: default; }
   overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 10px;
   -webkit-overflow-scrolling: touch;
 }
-.table-wrap.prov { border-style: dashed; }
-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.table-wrap.prov { border-style: dashed; border-color: var(--muted); }
+table { border-collapse: separate; border-spacing: 0; width: 100%; font-variant-numeric: tabular-nums; }
 th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
 tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
 thead th { background: var(--head); font-size: 12px; font-weight: 600; color: var(--muted); }
@@ -73,10 +74,10 @@ td.order { color: var(--muted); }
 p .note { display: inline; margin-right: 6px; }
 .pot { margin: 8px 2px 0; font-weight: 600; }
 footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
-body.empty section.week { display: none; }
+body.empty section, body.empty #week, body.noweek section.week, body.nosettlement #settlement-section { display: none; }
 </style>
 </head>
-<body>
+<body class="empty">
 <main>
   <header>
     <h1 id="league">Fantasy League</h1>
@@ -95,7 +96,7 @@ body.empty section.week { display: none; }
     <h2>Lightning table</h2>
     <div id="lightning"></div>
   </section>
-  <section class="week">
+  <section class="week" id="settlement-section">
     <h2>Week settlement</h2>
     <div id="settlement"></div>
   </section>

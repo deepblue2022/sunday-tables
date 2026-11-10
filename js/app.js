@@ -1,7 +1,9 @@
 // Browser glue: load the data files, build the model (js/view.js), render it, and keep it fresh.
-import { newState, refresh } from "./view.js";
+import { newState, refresh, statusLine, bannerLines, checkIndex } from "./view.js";
 import { renderTeamTable, renderLightning, renderSettlement, renderStandings, esc } from "./render.js";
 
+const TIMEOUT_MS = 15000;
+const RETRY_MS = 60000;
 const $ = (id) => document.getElementById(id);
 const hhmm = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 const weekPath = (w) => `data/weeks/${w.season}-${String(w.week).padStart(2, "0")}.json`;
@@ -10,20 +12,35 @@ const weekPath = (w) => `data/weeks/${w.season}-${String(w.week).padStart(2, "0"
 async function getData(path) {
   let r;
   try {
-    r = await fetch(path, { cache: "no-cache" });
+    r = await fetch(path, { cache: "no-cache", signal: AbortSignal.timeout(TIMEOUT_MS) });
   } catch {
     throw new Error(`Could not load ${path}`);
   }
   if (!r.ok) throw new Error(`Could not load ${path} (HTTP ${r.status})`);
+  let data;
   try {
-    return await r.json();
+    data = await r.json();
   } catch {
     throw new Error(`${path} is not valid JSON`);
   }
+  if (data === null || typeof data !== "object") throw new Error(`${path} does not hold the expected data`);
+  return data;
+}
+
+async function loadData() {
+  const [league, baseline, index] = await Promise.all([
+    getData("data/league.json"),
+    getData("data/baseline.json"),
+    getData("data/weeks/index.json"),
+  ]);
+  checkIndex(index);
+  if (!Array.isArray(league.owners)) throw new Error("data/league.json does not list the owners");
+  const weekFiles = await Promise.all(index.map((w) => getData(weekPath(w))));
+  return { league, baseline, weekFiles };
 }
 
 async function espnFetch(url) {
-  const r = await fetch(url);
+  const r = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
@@ -34,70 +51,97 @@ let picked = null; // week chosen by the viewer; null = follow the default
 let timer = null;
 let loading = false;
 let lastLoadAt = 0;
+let failed = false; // the last load could not finish; try again soon
+const shownHtml = {};
+
+// Replace an element's HTML only when it changed, keeping each table's sideways scroll position.
+function setHtml(id, html) {
+  if (shownHtml[id] === html) return;
+  const el = $(id);
+  const scrolls = [...el.querySelectorAll(".table-wrap")].map((w) => w.scrollLeft);
+  el.innerHTML = html;
+  shownHtml[id] = html;
+  el.querySelectorAll(".table-wrap").forEach((w, i) => {
+    if (scrolls[i]) w.scrollLeft = scrolls[i];
+  });
+}
 
 function banner(messages, isError = false) {
   const el = $("banner");
   el.hidden = messages.length === 0;
   el.className = isError ? "error" : "";
-  el.innerHTML = messages.map((m) => `<p>${esc(m)}</p>`).join("");
+  setHtml("banner", messages.map((m) => `<p>${esc(m)}</p>`).join(""));
 }
 
-function render() {
+function render(dataProblem) {
   const { league } = state;
+  if (picked !== null && !model.weeks.some((w) => w.week === picked)) picked = null;
   const selected = picked ?? model.defaultWeek;
-  const week = model.weeks.find((w) => w.week === selected) ?? model.weeks[model.weeks.length - 1];
+  const week = model.weeks.find((w) => w.week === selected) ?? null;
 
-  $("league").textContent = league.name;
-  $("week").innerHTML = model.weeks
-    .map((w) => `<option value="${w.week}"${w === week ? " selected" : ""}>Week ${w.week}</option>`)
-    .join("");
-  $("updated").textContent = `updated ${hhmm(new Date(lastLoadAt))}`;
+  $("league").textContent = league.name ?? "Fantasy League";
+  setHtml("week", model.weeks.map((w) => `<option value="${esc(w.week)}">Week ${esc(w.week)}</option>`).join(""));
+  if (week) $("week").value = String(week.week);
+  $("week").hidden = model.weeks.length === 0;
+  $("updated").textContent = `checked ${hhmm(new Date(lastLoadAt))}`;
 
-  const messages = [];
-  if (model.unavailable) {
-    messages.push(model.dataFrom ? `Live stats unavailable — showing data from ${hhmm(model.dataFrom)}` : "Live stats unavailable — no scores yet");
-  }
-  if (model.gameErrors) messages.push("Some games could not be loaded; their players show “?”.");
+  const messages = bannerLines(model, week, hhmm);
+  if (dataProblem) messages.unshift(`${dataProblem} — showing what was loaded earlier`);
   banner(messages);
 
+  $("status").textContent = week ? statusLine(week) : "No weeks published yet.";
   const shown = week?.result ?? week?.placeholder ?? null;
-  const weekFile = week && state.weekFiles.find((f) => f.week === week.week);
-  if (!week) {
-    $("status").textContent = "No weeks published yet.";
-  } else if (week.problem) {
-    $("status").textContent = `Week ${week.week} cannot be shown: ${week.problem}`;
-  } else if (week.recorded) {
-    $("status").textContent = `Week ${week.week} · final`;
-  } else if (week.result?.final) {
-    $("status").textContent = `Week ${week.week} · final (not yet added to the standings)`;
-  } else {
-    $("status").textContent = `Week ${week.week} · provisional — games still to finish`;
-  }
-  $("team").innerHTML = shown ? renderTeamTable(shown, league, weekFile.team_table.columns) : "";
-  $("lightning").innerHTML = shown ? renderLightning(shown, league) : "";
-  $("settlement").innerHTML = shown ? renderSettlement(shown, league) : "";
-  $("standings").innerHTML = model.standings
-    ? renderStandings(model.standings, league)
-    : `<p class="pot">Standings cannot be shown: ${esc(model.standingsProblem)}</p>`;
-  document.body.classList.toggle("empty", !shown);
+  const weekFile = week && state.weekFiles.find((f) => f.season === week.season && f.week === week.week);
+  setHtml("team", shown ? renderTeamTable(shown, league, weekFile.team_table.columns) : "");
+  setHtml("lightning", shown ? renderLightning(shown, league) : "");
+  // No settlement to show until some real scores have loaded.
+  setHtml("settlement", week?.result ? renderSettlement(week.result, league) : "");
+  setHtml(
+    "standings",
+    model.standings ? renderStandings(model.standings, league) : `<p class="pot">Standings cannot be shown: ${esc(model.standingsProblem)}</p>`,
+  );
+  document.body.classList.remove("empty");
+  document.body.classList.toggle("noweek", !shown);
+  document.body.classList.toggle("nosettlement", !week?.result);
+}
+
+// Nothing can be shown at all (first load failed): say why and keep trying.
+function fatal(message) {
+  banner([message], true);
+  $("status").textContent = "";
+  document.body.classList.add("empty");
 }
 
 function schedule() {
   clearTimeout(timer);
   timer = null;
-  if (model?.pollMs && !document.hidden) timer = setTimeout(load, model.pollMs);
+  const delay = failed ? RETRY_MS : model?.pollMs;
+  if (delay && !document.hidden) timer = setTimeout(load, delay);
 }
 
 async function load() {
-  if (loading || !state) return;
+  if (loading) return;
   loading = true;
   $("refresh").disabled = true;
+  failed = false;
   try {
+    // Re-read the data files every time, so a newly published week or a correction appears in
+    // an open tab. If that fails but an earlier load worked, keep showing the earlier data.
+    let dataProblem = null;
+    try {
+      state = newState(await loadData(), state);
+    } catch (err) {
+      if (!state) throw err;
+      dataProblem = err.message;
+      failed = true;
+    }
     model = await refresh(state, espnFetch);
     lastLoadAt = Date.now();
-    render();
+    render(dataProblem);
   } catch (err) {
-    banner([`Something went wrong: ${err.message}`], true);
+    failed = true;
+    if (model) banner([`Could not refresh: ${err.message}`], true);
+    else fatal(err.message);
   } finally {
     loading = false;
     $("refresh").disabled = false;
@@ -105,31 +149,15 @@ async function load() {
   }
 }
 
-async function start() {
-  try {
-    const [league, baseline, index] = await Promise.all([
-      getData("data/league.json"),
-      getData("data/baseline.json"),
-      getData("data/weeks/index.json"),
-    ]);
-    const weekFiles = await Promise.all(index.map((w) => getData(weekPath(w))));
-    state = newState({ league, baseline, weekFiles });
-  } catch (err) {
-    banner([err.message], true);
-    return;
-  }
-  $("week").addEventListener("change", (e) => {
-    picked = Number(e.target.value);
-    render();
-  });
-  $("refresh").addEventListener("click", load);
-  // A tab that was hidden stops polling; when it comes back, catch up straight away if stale.
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) clearTimeout(timer);
-    else if (model?.pollMs && Date.now() - lastLoadAt > 60000) load();
-    else schedule();
-  });
-  await load();
-}
-
-start();
+$("week").addEventListener("change", (e) => {
+  picked = Number(e.target.value);
+  if (model) render(null);
+});
+$("refresh").addEventListener("click", load);
+// A hidden tab stops polling; when it comes back, catch up straight away if it has been a while.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) clearTimeout(timer);
+  else if (Date.now() - lastLoadAt > RETRY_MS) load();
+  else schedule();
+});
+load();

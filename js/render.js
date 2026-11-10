@@ -98,8 +98,8 @@ export function renderSettlement(result, league) {
 
 export function renderStandings(standings, league) {
   const open = standings.open;
-  const weekHead = (w) => `<th>Wk ${w.week}${w.amounts ? (w.provisional ? note("provisional") : "") : note("not loaded")}</th>`;
-  const head = `<tr><th>Team</th><th>Thru Wk ${standings.recordedThrough}</th>${open.map(weekHead).join("")}<th>Total</th><th>Order</th></tr>`;
+  const weekHead = (w) => `<th>Wk ${esc(w.week)}${w.amounts ? (w.provisional ? note("provisional") : "") : note("not loaded")}</th>`;
+  const head = `<tr><th>Team</th><th>Thru Wk ${esc(standings.recordedThrough)}</th>${open.map(weekHead).join("")}<th>Total</th><th>Order</th></tr>`;
   const rows = league.owners
     .map((o) => {
       const weeks = open.map((w) => (w.amounts ? moneyCell(w.amounts[o.key]) : `<td class="money">${DASH}</td>`)).join("");
