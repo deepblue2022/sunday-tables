@@ -23,13 +23,13 @@ export const showsDash = (state) => state === "not_started" || state === "unknow
 const DASH = "—";
 const moneyCell = (cents, extra = "") => {
   const sign = cents > 0 ? " pos" : cents < 0 ? " neg" : "";
-  return `<td class="${extra}money${sign}">${fmtMoney(cents)}</td>`;
+  return `<td class="${extra}money${sign}">${esc(fmtMoney(cents))}</td>`;
 };
 const note = (text) => `<span class="note">${esc(text)}</span>`;
 const playerCell = (c, highlight) => {
   const tag = STATE_TAG[c.state] ? `<span class="tag ${c.state}">${STATE_TAG[c.state]}</span>` : "";
   const points = showsDash(c.state) ? DASH : c.points;
-  return `<td class="cell${highlight ? " win" : ""} ${c.state}"><span class="pname">${esc(c.name)}</span><span class="pts">${points}</span>${tag}</td>`;
+  return `<td class="cell${highlight ? " win" : ""} ${esc(c.state)}"><span class="pname">${esc(c.name)}</span><span class="pts">${esc(points)}</span>${tag}</td>`;
 };
 const wrap = (table, provisional) => `<div class="table-wrap${provisional ? " prov" : ""}">${table}</div>`;
 const rowHead = (owner) => `<th scope="row">${esc(owner.display)}</th>`;
@@ -45,7 +45,7 @@ export function renderTeamTable(result, league, columns) {
     .map((o) => {
       const row = team.rows[o.key];
       const cells = row.players.map((c) => playerCell(c, false)).join("");
-      return `<tr${win.includes(o.key) ? ' class="win"' : ""}>\n${rowHead(o)}${cells}<td class="total">${row.total}</td></tr>`;
+      return `<tr${win.includes(o.key) ? ' class="win"' : ""}>\n${rowHead(o)}${cells}<td class="total">${esc(row.total)}</td></tr>`;
     })
     .join("\n");
   const pot = `$${(league.teamBuyInCents * league.owners.length) / 100}`;
@@ -170,7 +170,7 @@ export function renderStandings(standings, league, sort = null, thruWeek = null)
     .map((o) => {
       const weeks = open.map((w) => (w.amounts ? moneyCell(w.amounts[o.key]) : `<td class="money">${DASH}</td>`)).join("");
       const total = moneyCell(standings.totals[o.key], "net ");
-      return `<tr>${rowHead(o)}${moneyCell(thru.totals[o.key])}${weeks}${total}<td class="order">${standings.order[o.key]}</td></tr>`;
+      return `<tr>${rowHead(o)}${moneyCell(thru.totals[o.key])}${weeks}${total}<td class="order">${esc(standings.order[o.key])}</td></tr>`;
     })
     .join("\n");
   const table = `<table class="grid standings"><thead>${head}</thead><tbody>\n${rows}\n</tbody></table>`;

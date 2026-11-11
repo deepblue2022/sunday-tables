@@ -156,3 +156,21 @@ test("provisional tables carry the prov class; settled ones do not", () => {
   const done = build({ Art: [9, 9, 9, 9, 9] }, {});
   assert.doesNotMatch(renderTeamTable(scoreWeek(done.weekFile, done.playersById, league), league, TEAM_COLS), /prov/);
 });
+
+test("builders escape points, totals, player states and order values too", () => {
+  const { weekFile, playersById } = build({ Art: [9, 9, 9, 9, 9] }, {});
+  const result = scoreWeek(weekFile, playersById, league);
+  const row = result.team.rows.Art;
+  row.players[0] = { ...row.players[0], points: "<b>9", state: 'final"><i>' };
+  row.total = "<u>45";
+  const team = renderTeamTable(result, league, TEAM_COLS);
+  assert.doesNotMatch(team, /<b>|<i>|<u>/);
+  assert.match(team, /&lt;b&gt;9/);
+  assert.match(team, /final&quot;&gt;&lt;i&gt;/);
+  assert.match(team, /&lt;u&gt;45/);
+  const st = standings(flat, [{ week: 9, recorded: false, final: false, settlement: result.settlement }], league);
+  st.order.Art = "<s>1";
+  const table = renderStandings(st, league);
+  assert.doesNotMatch(table, /<s>/);
+  assert.match(table, /&lt;s&gt;1/);
+});
