@@ -13,6 +13,13 @@ export function checkIndex(index) {
   if (!ok) throw new Error("data/weeks/index.json must be a list of {season, week} entries");
 }
 
+// The recorded week file already loaded for this index entry, or null. A recorded week does not
+// change, so a refresh reuses it instead of downloading it again; reloading the page re-reads it.
+// Unrecorded weeks are always downloaded again, so a week being recorded shows up.
+export function keptRecorded(entry, previous) {
+  return previous?.weekFiles.find((f) => f.season === entry.season && f.week === entry.week && f.recorded) ?? null;
+}
+
 // `previous` is the state being replaced after the data files were re-read: finished-game
 // summaries and the last good live results carry over.
 export function newState({ league, baseline, weekFiles }, previous = null) {

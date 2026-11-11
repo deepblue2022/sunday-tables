@@ -1,5 +1,5 @@
 // Browser glue: load the data files, build the model (js/view.js), render it, and keep it fresh.
-import { newState, refresh, statusLine, bannerLines, checkIndex } from "./view.js";
+import { newState, refresh, statusLine, bannerLines, checkIndex, keptRecorded } from "./view.js";
 import { renderTeamTable, renderLightning, renderSettlement, renderStandings, nextSort, esc } from "./render.js";
 
 const TIMEOUT_MS = 15000;
@@ -35,7 +35,7 @@ async function loadData() {
   ]);
   checkIndex(index);
   if (!Array.isArray(league.owners)) throw new Error("data/league.json does not list the owners");
-  const weekFiles = await Promise.all(index.map((w) => getData(weekPath(w))));
+  const weekFiles = await Promise.all(index.map((w) => keptRecorded(w, state) ?? getData(weekPath(w))));
   return { league, baseline, weekFiles };
 }
 
@@ -129,8 +129,9 @@ async function load() {
   $("refresh").disabled = true;
   failed = false;
   try {
-    // Re-read the data files every time, so a newly published week or a correction appears in
-    // an open tab. If that fails but an earlier load worked, keep showing the earlier data.
+    // Re-read the data files every time (recorded weeks excepted: see keptRecorded), so a newly
+    // published week appears in an open tab. If that fails but an earlier load worked, keep
+    // showing the earlier data.
     let dataProblem = null;
     try {
       state = newState(await loadData(), state);
