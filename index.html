@@ -71,10 +71,10 @@ button.pcell {
 button.pcell:hover .pname { color: var(--ink); text-decoration: underline dotted; text-underline-offset: 2px; }
 button.pcell:focus-visible { outline: 2px solid var(--pos); outline-offset: -2px; border-radius: 4px; }
 .star { color: var(--live); font-weight: 700; font-size: 12px; margin-left: 1px; }
-/* Game state at a glance: yet to play is faded with its kickoff time, playing has an orange edge
-   and orange points, done is plain. */
-td.cell.not_started .pname, td.cell.not_started .pts { opacity: 0.6; }
-.kick { font-size: 12px; font-weight: 500; color: var(--muted); }
+/* Game state at a glance: yet to play shows a small gray kickoff time instead of a score (no
+   fading, so it stays readable in dark mode), playing has an orange edge and orange points,
+   done is plain. */
+.kick { font-size: 13px; font-weight: 500; color: var(--muted); }
 td.cell.live button.pcell { box-shadow: inset 3px 0 0 var(--live); }
 td.cell.live .pts { color: var(--live); }
 td.cell.live.win .pts { color: var(--win-ink); }

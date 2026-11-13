@@ -8,7 +8,7 @@
 import { readFile, writeFile, rename } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { scoreWeek, standings, derivePlayers } from "../js/scoring.js";
+import { scoreWeek, standings, derivePlayers, twoPtWarnings } from "../js/scoring.js";
 import { loadLive, fetchRosters, fetchScoreboard, playedTeams, API } from "../js/espn.js";
 import { resolveDraft, applyPlayedTeams, recordWeek, zeros, teamMismatches, formatWeek, gatherWeeks, assertWeekIdentity, parseArgs } from "./lib.mjs";
 
@@ -89,16 +89,19 @@ async function cmdWeek({ season, week, record }) {
     }
     const live = await loadLive(weekFile, fetchFn);
     const players = derivePlayers(weekFile, live.scoreboard, live.gamesById);
-    return { weekFile, players, result: scoreWeek(weekFile, players, league), errors: live.errors };
+    const twoPt = twoPtWarnings(weekFile, live.scoreboard, live.gamesById);
+    return { weekFile, players, result: scoreWeek(weekFile, players, league), errors: live.errors, twoPt };
   };
   const { weeks, selected, warnings } = await gatherWeeks(index.filter((w) => w.season === season), week, load);
-  const { weekFile, players, result, errors } = selected;
+  const { weekFile, players, result, errors, twoPt = [] } = selected;
 
   const status = weekFile.recorded ? "recorded" : result.final ? "final, not recorded" : "provisional";
   console.log(`${season} week ${week} (${status})\n`);
   console.log(formatWeek(result, standings(baseline, weeks, league), league));
   for (const w of warnings) console.log(`\nWARNING: ${w}`);
   for (const e of errors) console.log(`\nWARNING: could not load ${e}`);
+  for (const t of twoPt) console.log(`\n2-PT CHECK: ${t}`);
+  if (twoPt.length) console.log("Settle each one with a two_pt_fixes entry in the week file (see RULES.md).");
 
   if (weekFile.recorded) {
     if (record) throw new Error(`Week ${week} is already recorded. To re-record, delete "recorded" from its week file first.`);
@@ -111,6 +114,7 @@ async function cmdWeek({ season, week, record }) {
   if (!record) return;
 
   if (errors.length) throw new Error("Not recording: some games could not be loaded.");
+  if (twoPt.length) throw new Error("Not recording: settle the 2-PT CHECK items above first.");
   const recorded = recordWeek(weekFile, players, result, teams);
   const zero = zeros(weekFile, players);
   console.log(zero.length ? "\nScored 0 for not playing (confirm each is real):" : "\nNo DNP or BYE players.");

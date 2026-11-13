@@ -89,6 +89,21 @@ export function validateWeekFile(weekFile, league) {
       }
     }
   }
+  if (weekFile?.two_pt_fixes !== undefined) {
+    const fixes = weekFile.two_pt_fixes;
+    if (!Array.isArray(fixes)) problems.push("two_pt_fixes must be a list");
+    else {
+      fixes.forEach((f, i) => {
+        const where = `two_pt_fixes[${i}]`;
+        if (!isText(f?.play)) problems.push(`${where} needs the scoring play id ("play")`);
+        if (!isText(f?.reason)) problems.push(`${where} needs a reason`);
+        if (f?.id === null || f?.id === undefined) {
+          if (f?.points) problems.push(`${where} gives points but names no player ("id")`);
+        } else if (!seen.has(f.id)) problems.push(`${where}: player id ${f.id} is not on this week's rosters`);
+        else if (![1, 2].includes(f.points)) problems.push(`${where}: points must be 1 (passer) or 2 (receiver or runner)`);
+      });
+    }
+  }
   if (problems.length) throw new Error(`Week file ${weekLabel(weekFile)}: ${problems.join("; ")}`);
 }
 
@@ -240,6 +255,9 @@ export function derivePlayers(weekFile, scoreboard, gamesById) {
       if (summary) {
         const line = summary.stats[p.id];
         const twoPt = summary.twoPt.filter((t) => t.name === p.name && t.team === p.team);
+        // 2-pt conversions ESPN's play text did not credit, added by the scorekeeper (see RULES.md)
+        const fixed = (weekFile.two_pt_fixes ?? []).filter((f) => f.id === p.id && f.points);
+        twoPt.push(...fixed);
         const twoPtPoints = twoPt.reduce((a, t) => a + t.points, 0);
         points = playerPoints(line, twoPtPoints);
         if (line || twoPt.length) stats = { ...line, ...(twoPtPoints ? { twoPt: twoPtPoints } : {}) };
@@ -257,4 +275,47 @@ export function derivePlayers(weekFile, scoreboard, gamesById) {
     }
   }
   return out;
+}
+
+// Lowercase, no punctuation, no generational suffix: "Aaron Jones Sr." and "Aaron Jones" compare equal.
+const looseName = (name) =>
+  String(name)
+    .toLowerCase()
+    .replace(/[.'’]/g, "")
+    .split(/\s+/)
+    .filter((w) => w && !["jr", "sr", "ii", "iii", "iv", "v"].includes(w))
+    .join(" ");
+
+// Two-point conversions that may have been scored wrongly, in finished games only (during a game
+// the 2 points can show up a moment after the touchdown). Each is a sentence for the scorekeeper.
+// A flagged play is settled by a two_pt_fixes entry for that play.
+export function twoPtWarnings(weekFile, scoreboard, gamesById) {
+  const settled = new Set((weekFile.two_pt_fixes ?? []).map((f) => f.play));
+  const players = rostered(weekFile);
+  const exact = new Set(players.map((p) => `${p.name}|${p.team}`));
+  const out = [];
+  for (const g of relevantGames(weekFile, scoreboard).filter((g) => g.phase === "done")) {
+    const summary = gamesById[g.id];
+    if (!summary) continue;
+    const label = `${g.teams.join(" v ")} (game ${g.id})`;
+    for (const issue of summary.twoPtIssues ?? []) {
+      if (issue.play && settled.has(issue.play)) continue;
+      out.push(`${label}, play ${issue.play ?? "?"}: ${issue.problem}: "${issue.text}"`);
+    }
+    for (const t of summary.twoPt) {
+      if (exact.has(`${t.name}|${t.team}`) || (t.play && settled.has(t.play))) continue;
+      // same team, and the same name apart from punctuation and suffixes, or the same last name
+      // and first initial ("Mitch Trubisky" / "Mitchell Trubisky")
+      const a = looseName(t.name).split(" ");
+      const near = players.find((p) => {
+        if (p.team !== t.team) return false;
+        const b = looseName(p.name).split(" ");
+        return b.join(" ") === a.join(" ") || (b.at(-1) === a.at(-1) && b[0]?.[0] === a[0]?.[0]);
+      });
+      if (near) {
+        out.push(`${label}, play ${t.play ?? "?"}: the play text credits "${t.name}" (${t.team}) with ${t.points}, which is not exactly our player "${near.name}"`);
+      }
+    }
+  }
+  return [...new Set(out)];
 }

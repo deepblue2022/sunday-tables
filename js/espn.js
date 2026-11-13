@@ -71,19 +71,36 @@ export function parseGame(json) {
     }
   }
   const twoPt = [];
-  for (const play of json.scoringPlays ?? []) {
+  // Cross-check against the score: a successful 2-pt try is the only way a team's score goes
+  // up by exactly 8 on one scoring play. Only possible when every play carries the running
+  // score (real ESPN data does).
+  const plays = json.scoringPlays ?? [];
+  const scored = plays.length > 0 && plays.every((p) => Number.isFinite(Number(p.awayScore)) && Number.isFinite(Number(p.homeScore)));
+  const twoPtIssues = [];
+  let prev = { away: 0, home: 0 };
+  for (const play of plays) {
     const team = play.team?.abbreviation;
+    const ref = play.id != null ? { play: String(play.id) } : {};
+    const found = [];
     for (const [, inner] of (play.text ?? "").matchAll(/\(([^()]*)\)/g)) {
       const pass = inner.match(TWO_PT_PASS);
       const run = inner.match(TWO_PT_RUN);
       if (pass) {
-        twoPt.push({ name: pass[1], team, points: 1 }, { name: pass[2], team, points: 2 });
+        found.push({ name: pass[1], team, points: 1, ...ref }, { name: pass[2], team, points: 2, ...ref });
       } else if (run) {
-        twoPt.push({ name: run[1], team, points: 2 });
+        found.push({ name: run[1], team, points: 2, ...ref });
       }
     }
+    twoPt.push(...found);
+    if (scored) {
+      const now = { away: Number(play.awayScore), home: Number(play.homeScore) };
+      const eight = now.away - prev.away === 8 || now.home - prev.home === 8;
+      if (eight && !found.length) twoPtIssues.push({ ...ref, team, text: play.text ?? "", problem: "the score went up by 8 but no 2-pt conversion was credited" });
+      if (!eight && found.length) twoPtIssues.push({ ...ref, team, text: play.text ?? "", problem: "a 2-pt conversion was credited but the score did not go up by 8" });
+      prev = now;
+    }
   }
-  return { stats, twoPt };
+  return twoPtIssues.length ? { stats, twoPt, twoPtIssues } : { stats, twoPt };
 }
 
 // From a raw game summary: athlete id -> abbreviation of the team he played for in that game.

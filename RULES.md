@@ -40,6 +40,15 @@ as the player's `points` in the recorded week and add `"override": {"rules": <ru
 The site marks the score with a `*` and the stats card shows both numbers. The tests check that every other
 saved score matches its stat line exactly.
 
+**2-pt check:** ESPN's box score has no 2-pt conversions, so they are read from the scoring-play text and
+cross-checked against the score (a team's score rising by exactly 8 on one play means a successful 2-pt try).
+For finished games, `npm run score -- <season> <week>` prints a `2-PT CHECK` line for any play where the two
+disagree, or where the play text names someone who is almost, but not exactly, one of our players (e.g.
+"Mitch Trubisky" vs "Mitchell Trubisky"). `--record` refuses until each is settled in the week file:
+`"two_pt_fixes": [{"play": "<play id>", "id": "<athlete id>", "points": 1 or 2, "reason": "..."}]` credits the
+player (1 for the passer, 2 for the receiver or runner); use `"id": null, "points": 0` when nobody of ours
+should get anything. The site uses the fix too.
+
 **Cancelled or postponed games:** the site leaves that week provisional and the players show "?".
 The scorekeeper decides how to settle it.
 

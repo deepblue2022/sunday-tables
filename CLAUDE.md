@@ -19,7 +19,8 @@ The scorekeeper pastes two tables per week: the Team table (QB/RB/RB/WR/WR) and 
 (7 columns; names and order vary by week, e.g. QB2/QB3/RB2/RB3/QB4/RB4/WR2). Short names like "Watson".
 
 1. **Record the previous week** if all its games are final: `npm run score -- <season> <week> --record`.
-   Skip if its file already has `"recorded"`.
+   Skip if its file already has `"recorded"`. If it prints `2-PT CHECK` lines, show them to the scorekeeper
+   and agree each `two_pt_fixes` entry (RULES.md) before recording.
 2. **Draft:** write `/tmp/weekN-draft.json` in the shape of `test/fixtures/2026-09/week-draft.json`, with
    ESPN full display names ("James Cook III", "Michael Penix Jr.", "C.J. Stroud"). Reuse full names from
    earlier `data/weeks/*.json` files where the same player appears.
