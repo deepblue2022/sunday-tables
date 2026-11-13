@@ -118,6 +118,12 @@ export function recordWeek(weekFile, playersById, result, currentTeams) {
   for (const p of rostered(weekFile)) {
     const r = playersById[p.id];
     players[p.id] = { points: r.points, state: r.state };
+    if (r.stats) players[p.id].stats = r.stats;
+    if (r.game) {
+      // the final score is kept; the kickoff time and live status text are not
+      players[p.id].game = { opp: r.game.opp, home: r.game.home };
+      if (r.game.score) players[p.id].game.score = r.game.score;
+    }
   }
   return { ...weekFile, recorded: { players } };
 }
@@ -126,7 +132,7 @@ const pad = (s, n) => String(s).padEnd(n);
 const short = (name) => name.split(" ").filter((w) => !SUFFIXES.includes(w)).pop();
 const cellText = (c) => {
   const tag = STATE_TAG[c.state] ? ` ${STATE_TAG[c.state]}` : "";
-  return `${short(c.name)}=${showsDash(c.state) ? "-" : c.points}${tag}`;
+  return `${short(c.name)}=${showsDash(c.state) ? "-" : c.points}${c.override ? "*" : ""}${tag}`;
 };
 const flag = (provisional) => (provisional ? " (provisional)" : "");
 

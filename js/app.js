@@ -1,11 +1,13 @@
 // Browser glue: load the data files, build the model (js/view.js), render it, and keep it fresh.
 import { newState, refresh, statusLine, bannerLines, checkIndex, keptRecorded } from "./view.js";
-import { renderTeamTable, renderLightning, renderSettlement, renderStandings, nextSort, esc } from "./render.js";
+import { renderTeamTable, renderLightning, renderSettlement, renderStandings, renderCard, nextSort, esc } from "./render.js";
 
 const TIMEOUT_MS = 15000;
 const RETRY_MS = 60000;
 const $ = (id) => document.getElementById(id);
 const hhmm = (d) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+// "Sun 1:00 PM" in the viewer's own time zone
+const kickoff = (iso) => new Date(iso).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
 const weekPath = (w) => `data/weeks/${w.season}-${String(w.week).padStart(2, "0")}.json`;
 
 // Our own data files: always revalidate, so a new publish shows up without a hard refresh.
@@ -56,6 +58,8 @@ const shownHtml = {};
 const sorts = { settlement: null, standings: null }; // column each table is sorted by; null = league order
 let shownProblem = null;
 let thruWeek = null; // week the standings' "Thru Wk" column runs through; null = the latest recorded
+let shown = null; // {result, weekFile} for the week on screen, so a tapped player box can be found
+let cardKey = null; // the player box whose stats card is open
 
 // Replace an element's HTML only when it changed, keeping each table's sideways scroll position.
 function setHtml(id, html) {
@@ -94,10 +98,11 @@ function render(dataProblem) {
   banner(messages);
 
   $("status").textContent = week ? statusLine(week) : "No weeks published yet.";
-  const shown = week?.result ?? week?.placeholder ?? null;
+  const result = week?.result ?? week?.placeholder ?? null;
   const weekFile = week && state.weekFiles.find((f) => f.season === week.season && f.week === week.week);
-  setHtml("team", shown ? renderTeamTable(shown, league, weekFile.team_table.columns) : "");
-  setHtml("lightning", shown ? renderLightning(shown, league) : "");
+  shown = result ? { result, weekFile, loaded: Boolean(week.result) } : null;
+  setHtml("team", result ? renderTeamTable(result, league, weekFile.team_table.columns, kickoff) : "");
+  setHtml("lightning", result ? renderLightning(result, league, kickoff) : "");
   // No settlement to show until some real scores have loaded.
   setHtml("settlement", week?.result ? renderSettlement(week.result, league, sorts.settlement) : "");
   setHtml(
@@ -105,9 +110,56 @@ function render(dataProblem) {
     model.standings ? renderStandings(model.standings, league, sorts.standings, thruWeek) : `<p class="pot">Standings cannot be shown: ${esc(model.standingsProblem)}</p>`,
   );
   document.body.classList.remove("empty");
-  document.body.classList.toggle("noweek", !shown);
+  document.body.classList.toggle("noweek", !result);
   document.body.classList.toggle("nosettlement", !week?.result);
+  if (cardKey) showCard(cardKey); // keep an open card up to date with live scores
 }
+
+// ---------- Stats card ----------
+
+
+// The player cell and its label ("Kevin · QB3") for a box key from js/render.js, or null.
+function cardCell(key) {
+  if (!shown) return null;
+  const [table, a, b] = key.split("|");
+  const owner = (k) => state.league.owners.find((o) => o.key === k)?.display ?? k;
+  if (table === "t") {
+    const cell = shown.result.team.rows[a]?.players[Number(b)];
+    return cell ? { cell, context: `${owner(a)} · ${shown.weekFile.team_table.columns[Number(b)]}` } : null;
+  }
+  const col = shown.result.lightning.columns[Number(a)];
+  const cell = col?.cells[b];
+  return cell ? { cell, context: `${owner(b)} · ${col.name}` } : null;
+}
+
+function showCard(key) {
+  const dialog = $("card");
+  const found = cardCell(key);
+  if (!found) {
+    if (dialog.open) dialog.close();
+    return;
+  }
+  cardKey = key;
+  setHtml("card-body", renderCard(found.cell, found.context, kickoff, shown.loaded));
+  if (!dialog.open) dialog.showModal();
+}
+
+for (const id of ["team", "lightning"]) {
+  $(id).addEventListener("click", (e) => {
+    const key = e.target.closest?.("button[data-card]")?.dataset.card;
+    if (key) showCard(key);
+  });
+}
+// Close on the × button or a tap outside the card (the backdrop is the dialog element itself).
+$("card").addEventListener("click", (e) => {
+  if (e.target === $("card") || e.target.closest?.("[data-close]")) $("card").close();
+});
+$("card").addEventListener("close", () => {
+  // put keyboard focus back on the box the card came from
+  const key = cardKey;
+  cardKey = null;
+  [...document.querySelectorAll("button[data-card]")].find((b) => b.dataset.card === key)?.focus();
+});
 
 // Nothing can be shown at all (first load failed): say why and keep trying.
 function fatal(message) {

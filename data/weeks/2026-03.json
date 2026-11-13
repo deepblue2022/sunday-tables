@@ -477,255 +477,1230 @@
   "players": {
    "12483": {
     "points": 26,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 30,
+     "passAtt": 55,
+     "passYds": 390,
+     "passTD": 2,
+     "rushAtt": 2,
+     "rushYds": 13,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "DEN",
+     "home": false,
+     "score": {
+      "team": 26,
+      "opp": 30
+     }
+    }
    },
    "14880": {
     "points": 21,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 22,
+     "passAtt": 33,
+     "passYds": 248,
+     "passTD": 3,
+     "rushAtt": 3,
+     "rushYds": 3,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "NO",
+     "home": false,
+     "score": {
+      "team": 35,
+      "opp": 27
+     }
+    }
    },
    "15847": {
     "points": 11,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 2,
+     "recYds": 59,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "MIA",
+     "home": false,
+     "score": {
+      "team": 24,
+      "opp": 10
+     }
+    }
    },
    "15864": {
     "points": 27,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 31,
+     "passAtt": 37,
+     "passYds": 321,
+     "passTD": 3,
+     "rushAtt": 2,
+     "rushYds": 12,
+     "rushTD": 0,
+     "twoPt": 1
+    },
+    "game": {
+     "opp": "DET",
+     "home": false,
+     "score": {
+      "team": 24,
+      "opp": 31
+     }
+    }
    },
    "16800": {
     "points": 13,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 7,
+     "recYds": 137,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "DEN",
+     "home": false,
+     "score": {
+      "team": 26,
+      "opp": 30
+     }
+    }
    },
    "2577417": {
     "points": 18,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 25,
+     "passAtt": 40,
+     "passYds": 276,
+     "passTD": 1,
+     "rushAtt": 4,
+     "rushYds": 19,
+     "rushTD": 0,
+     "twoPt": 1
+    },
+    "game": {
+     "opp": "BAL",
+     "home": true,
+     "score": {
+      "team": 31,
+      "opp": 34
+     }
+    }
    },
    "3040151": {
     "points": 20,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 6,
+     "recYds": 82,
+     "recTD": 2
+    },
+    "game": {
+     "opp": "ARI",
+     "home": true,
+     "score": {
+      "team": 36,
+      "opp": 30
+     }
+    }
    },
    "3043078": {
     "points": 20,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 26,
+     "rushYds": 89,
+     "rushTD": 2,
+     "rec": 1,
+     "recYds": 0,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "DAL",
+     "home": false,
+     "score": {
+      "team": 34,
+      "opp": 31
+     }
+    }
    },
    "3046779": {
     "points": 19,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 25,
+     "passAtt": 32,
+     "passYds": 269,
+     "passTD": 2,
+     "rushAtt": 4,
+     "rushYds": 6,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "NYJ",
+     "home": true,
+     "score": {
+      "team": 31,
+      "opp": 24
+     }
+    }
    },
    "3052587": {
     "points": 13,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 17,
+     "passAtt": 34,
+     "passYds": 217,
+     "passTD": 1,
+     "rushAtt": 2,
+     "rushYds": 6,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "MIN",
+     "home": true,
+     "score": {
+      "team": 16,
+      "opp": 23
+     }
+    }
    },
    "3117251": {
     "points": 17,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 15,
+     "rushYds": 75,
+     "rushTD": 1,
+     "rec": 4,
+     "recYds": 41,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "ARI",
+     "home": true,
+     "score": {
+      "team": 36,
+      "opp": 30
+     }
+    }
    },
    "3139477": {
     "points": 18,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 20,
+     "passAtt": 24,
+     "passYds": 246,
+     "passTD": 2,
+     "rushAtt": 1,
+     "rushYds": 1,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "MIA",
+     "home": false,
+     "score": {
+      "team": 24,
+      "opp": 10
+     }
+    }
    },
    "3915511": {
     "points": 24,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 28,
+     "passAtt": 37,
+     "passYds": 282,
+     "passTD": 3,
+     "rushAtt": 2,
+     "rushYds": 13,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "PIT",
+     "home": false,
+     "score": {
+      "team": 27,
+      "opp": 30
+     }
+    }
    },
    "3916387": {
     "points": 20,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 15,
+     "passAtt": 20,
+     "passYds": 186,
+     "passTD": 2,
+     "rushAtt": 6,
+     "rushYds": 50,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "DAL",
+     "home": false,
+     "score": {
+      "team": 34,
+      "opp": 31
+     }
+    }
    },
    "3917315": {
     "points": 12,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 15,
+     "passAtt": 29,
+     "passYds": 168,
+     "passTD": 1,
+     "rushAtt": 2,
+     "rushYds": 17,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "TB",
+     "home": false,
+     "score": {
+      "team": 23,
+      "opp": 16
+     }
+    }
    },
    "3917792": {
     "points": 14,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 24,
+     "passAtt": 36,
+     "passYds": 235,
+     "passTD": 1,
+     "rushAtt": 3,
+     "rushYds": 5,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "HOU",
+     "home": true,
+     "score": {
+      "team": 19,
+      "opp": 17
+     }
+    }
    },
    "3918298": {
     "points": 24,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 16,
+     "passAtt": 26,
+     "passYds": 204,
+     "passTD": 0,
+     "rushAtt": 8,
+     "rushYds": 22,
+     "rushTD": 2,
+     "rec": 1,
+     "recYds": 1,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "LAC",
+     "home": true,
+     "score": {
+      "team": 24,
+      "opp": 16
+     }
+    }
    },
    "3929630": {
     "points": 8,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 15,
+     "rushYds": 82,
+     "rushTD": 0,
+     "rec": 1,
+     "recYds": -2,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "CHI",
+     "home": false,
+     "score": {
+      "team": 7,
+      "opp": 27
+     }
+    }
    },
    "4035538": {
     "points": 4,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 11,
+     "rushYds": 33,
+     "rushTD": 0,
+     "rec": 2,
+     "recYds": 15,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "IND",
+     "home": false,
+     "score": {
+      "team": 17,
+      "opp": 19
+     }
+    }
    },
    "4036378": {
     "points": 21,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 28,
+     "passAtt": 53,
+     "passYds": 312,
+     "passTD": 2,
+     "rushAtt": 1,
+     "rushYds": 0,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "ATL",
+     "home": true,
+     "score": {
+      "team": 14,
+      "opp": 35
+     }
+    }
    },
    "4038941": {
     "points": 15,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 20,
+     "passAtt": 34,
+     "passYds": 226,
+     "passTD": 1,
+     "rushAtt": 4,
+     "rushYds": 17,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "BUF",
+     "home": false,
+     "score": {
+      "team": 16,
+      "opp": 24
+     }
+    }
    },
    "4040715": {
     "points": 15,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 16,
+     "passAtt": 25,
+     "passYds": 153,
+     "passTD": 0,
+     "rushAtt": 4,
+     "rushYds": 25,
+     "rushTD": 1
+    },
+    "game": {
+     "opp": "CHI",
+     "home": false,
+     "score": {
+      "team": 7,
+      "opp": 27
+     }
+    }
    },
    "4239993": {
     "points": 15,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 6,
+     "recYds": 90,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "PIT",
+     "home": false,
+     "score": {
+      "team": 27,
+      "opp": 30
+     }
+    }
    },
    "4241389": {
     "points": 13,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 7,
+     "recYds": 112,
+     "recTD": 0,
+     "twoPt": 2
+    },
+    "game": {
+     "opp": "BAL",
+     "home": true,
+     "score": {
+      "team": 31,
+      "opp": 34
+     }
+    }
    },
    "4241416": {
     "points": 10,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 19,
+     "rushYds": 82,
+     "rushTD": 0,
+     "rec": 4,
+     "recYds": 28,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "CLE",
+     "home": false,
+     "score": {
+      "team": 18,
+      "opp": 21
+     }
+    }
    },
    "4241478": {
     "points": 6,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 6,
+     "recYds": 65,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "CHI",
+     "home": false,
+     "score": {
+      "team": 7,
+      "opp": 27
+     }
+    }
    },
    "4242335": {
     "points": 6,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 23,
+     "rushYds": 68,
+     "rushTD": 0,
+     "rec": 2,
+     "recYds": 4,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "HOU",
+     "home": true,
+     "score": {
+      "team": 19,
+      "opp": 17
+     }
+    }
    },
    "4242512": {
     "points": 15,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 20,
+     "passAtt": 36,
+     "passYds": 210,
+     "passTD": 0,
+     "rushAtt": 9,
+     "rushYds": 56,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "KC",
+     "home": true,
+     "score": {
+      "team": 10,
+      "opp": 24
+     }
+    }
    },
    "4248528": {
     "points": 15,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 7,
+     "recYds": 96,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "ATL",
+     "home": true,
+     "score": {
+      "team": 14,
+      "opp": 35
+     }
+    }
    },
    "4259545": {
     "points": 8,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 20,
+     "rushYds": 84,
+     "rushTD": 0,
+     "rec": 2,
+     "recYds": 4,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "PHI",
+     "home": true,
+     "score": {
+      "team": 27,
+      "opp": 7
+     }
+    }
    },
    "4262921": {
     "points": 3,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 2,
+     "recYds": 32,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "TB",
+     "home": false,
+     "score": {
+      "team": 23,
+      "opp": 16
+     }
+    }
    },
    "4360310": {
     "points": 20,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 19,
+     "passAtt": 29,
+     "passYds": 182,
+     "passTD": 3,
+     "rushAtt": 4,
+     "rushYds": 25,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "NE",
+     "home": true,
+     "score": {
+      "team": 35,
+      "opp": 6
+     }
+    }
    },
    "4360689": {
     "points": 27,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 29,
+     "passAtt": 42,
+     "passYds": 255,
+     "passTD": 4,
+     "rushAtt": 1,
+     "rushYds": 36,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "LV",
+     "home": true,
+     "score": {
+      "team": 27,
+      "opp": 35
+     }
+    }
    },
    "4361307": {
     "points": 7,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 9,
+     "recYds": 75,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "SF",
+     "home": false,
+     "score": {
+      "team": 30,
+      "opp": 36
+     }
+    }
    },
    "4361370": {
     "points": 10,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 9,
+     "recYds": 107,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "LV",
+     "home": true,
+     "score": {
+      "team": 27,
+      "opp": 35
+     }
+    }
    },
    "4361579": {
     "points": 15,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 19,
+     "rushYds": 98,
+     "rushTD": 1,
+     "rec": 2,
+     "recYds": 5,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "BAL",
+     "home": true,
+     "score": {
+      "team": 31,
+      "opp": 34
+     }
+    }
    },
    "4361741": {
     "points": 29,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 15,
+     "passAtt": 27,
+     "passYds": 297,
+     "passTD": 4,
+     "rushAtt": 2,
+     "rushYds": 34,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "ARI",
+     "home": true,
+     "score": {
+      "team": 36,
+      "opp": 30
+     }
+    }
    },
    "4362238": {
     "points": 6,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 13,
+     "rushYds": 61,
+     "rushTD": 0,
+     "rec": 2,
+     "recYds": 8,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "PIT",
+     "home": false,
+     "score": {
+      "team": 27,
+      "opp": 30
+     }
+    }
    },
    "4362628": {
     "points": 15,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 9,
+     "recYds": 98,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "PIT",
+     "home": false,
+     "score": {
+      "team": 27,
+      "opp": 30
+     }
+    }
    },
    "4374302": {
     "points": 7,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 4,
+     "recYds": 19,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "NYJ",
+     "home": true,
+     "score": {
+      "team": 31,
+      "opp": 24
+     }
+    }
    },
    "4379399": {
     "points": 21,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 24,
+     "rushYds": 154,
+     "rushTD": 1,
+     "rec": 0,
+     "recYds": 0,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "LAC",
+     "home": true,
+     "score": {
+      "team": 24,
+      "opp": 16
+     }
+    }
    },
    "4385690": {
     "points": 3,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 2,
+     "recYds": 38,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "LAC",
+     "home": true,
+     "score": {
+      "team": 24,
+      "opp": 16
+     }
+    }
    },
    "4426338": {
     "points": 23,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 17,
+     "passAtt": 34,
+     "passYds": 186,
+     "passTD": 2,
+     "rushAtt": 4,
+     "rushYds": 7,
+     "rushTD": 1,
+     "twoPt": 2
+    },
+    "game": {
+     "opp": "LAR",
+     "home": true,
+     "score": {
+      "team": 30,
+      "opp": 26
+     }
+    }
    },
    "4426354": {
     "points": 8,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 7,
+     "recYds": 82,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "BAL",
+     "home": true,
+     "score": {
+      "team": 31,
+      "opp": 34
+     }
+    }
    },
    "4426502": {
     "points": 19,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 9,
+     "recYds": 194,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "GB",
+     "home": false,
+     "score": {
+      "team": 35,
+      "opp": 14
+     }
+    }
    },
    "4427366": {
     "points": 5,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 13,
+     "rushYds": 32,
+     "rushTD": 0,
+     "rec": 3,
+     "recYds": 23,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "DET",
+     "home": false,
+     "score": {
+      "team": 24,
+      "opp": 31
+     }
+    }
    },
    "4428331": {
     "points": 8,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 7,
+     "recYds": 88,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "MIA",
+     "home": false,
+     "score": {
+      "team": 24,
+      "opp": 10
+     }
+    }
    },
    "4429160": {
     "points": 1,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 3,
+     "rushYds": 17,
+     "rushTD": 0,
+     "rec": 0,
+     "recYds": 0,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "KC",
+     "home": true,
+     "score": {
+      "team": 10,
+      "opp": 24
+     }
+    }
    },
    "4429795": {
     "points": 33,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 20,
+     "rushYds": 99,
+     "rushTD": 2,
+     "rec": 7,
+     "recYds": 65,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "NYJ",
+     "home": true,
+     "score": {
+      "team": 31,
+      "opp": 24
+     }
+    }
    },
    "4430737": {
     "points": 15,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 15,
+     "rushYds": 88,
+     "rushTD": 0,
+     "rec": 6,
+     "recYds": 70,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "DEN",
+     "home": false,
+     "score": {
+      "team": 26,
+      "opp": 30
+     }
+    }
    },
    "4430807": {
     "points": 32,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 29,
+     "rushYds": 194,
+     "rushTD": 2,
+     "rec": 2,
+     "recYds": 19,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "GB",
+     "home": false,
+     "score": {
+      "team": 35,
+      "opp": 14
+     }
+    }
    },
    "4431452": {
     "points": 10,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 14,
+     "passAtt": 25,
+     "passYds": 199,
+     "passTD": 0,
+     "rushAtt": 4,
+     "rushYds": 18,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "JAX",
+     "home": false,
+     "score": {
+      "team": 6,
+      "opp": 35
+     }
+    }
    },
    "4432577": {
     "points": 12,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 16,
+     "passAtt": 27,
+     "passYds": 167,
+     "passTD": 1,
+     "rushAtt": 2,
+     "rushYds": 10,
+     "rushTD": 0
+    },
+    "game": {
+     "opp": "IND",
+     "home": false,
+     "score": {
+      "team": 17,
+      "opp": 19
+     }
+    }
    },
    "4432620": {
     "points": 10,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 3,
+     "recYds": 40,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "NE",
+     "home": true,
+     "score": {
+      "team": 35,
+      "opp": 6
+     }
+    }
    },
    "4567048": {
     "points": 19,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 18,
+     "rushYds": 70,
+     "rushTD": 1,
+     "rec": 2,
+     "recYds": 3,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "MIA",
+     "home": false,
+     "score": {
+      "team": 24,
+      "opp": 10
+     }
+    }
    },
    "4569618": {
     "points": 16,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 10,
+     "recYds": 107,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "DET",
+     "home": false,
+     "score": {
+      "team": 24,
+      "opp": 31
+     }
+    }
    },
    "4596448": {
     "points": 5,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 15,
+     "rushYds": 46,
+     "rushTD": 0,
+     "rec": 2,
+     "recYds": 12,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "MIN",
+     "home": true,
+     "score": {
+      "team": 16,
+      "opp": 23
+     }
+    }
    },
    "4612826": {
     "points": 6,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 4,
+     "recYds": 66,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "BUF",
+     "home": false,
+     "score": {
+      "team": 16,
+      "opp": 24
+     }
+    }
    },
    "4685382": {
     "points": 5,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 15,
+     "rushYds": 56,
+     "rushTD": 0,
+     "rec": 0,
+     "recYds": 0,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "BUF",
+     "home": false,
+     "score": {
+      "team": 16,
+      "opp": 24
+     }
+    }
    },
    "4685472": {
     "points": 1,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rec": 2,
+     "recYds": 17,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "CLE",
+     "home": false,
+     "score": {
+      "team": 18,
+      "opp": 21
+     }
+    }
    },
    "4685720": {
     "points": 17,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "passCmp": 26,
+     "passAtt": 48,
+     "passYds": 291,
+     "passTD": 1
+    },
+    "game": {
+     "opp": "CLE",
+     "home": false,
+     "score": {
+      "team": 18,
+      "opp": 21
+     }
+    }
    },
    "4870808": {
     "points": 16,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 21,
+     "rushYds": 90,
+     "rushTD": 0,
+     "rec": 5,
+     "recYds": 19,
+     "recTD": 1
+    },
+    "game": {
+     "opp": "SF",
+     "home": false,
+     "score": {
+      "team": 30,
+      "opp": 36
+     }
+    }
    },
    "4890973": {
     "points": 8,
-    "state": "final"
+    "state": "final",
+    "stats": {
+     "rushAtt": 19,
+     "rushYds": 56,
+     "rushTD": 0,
+     "rec": 3,
+     "recYds": 37,
+     "recTD": 0
+    },
+    "game": {
+     "opp": "NO",
+     "home": false,
+     "score": {
+      "team": 35,
+      "opp": 27
+     }
+    }
    }
   }
  }

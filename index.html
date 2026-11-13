@@ -63,7 +63,42 @@ select.thru { padding: 2px 6px; min-height: 30px; font-weight: 600; color: var(-
 button.sort:hover { color: var(--ink); }
 button.sort:focus-visible { outline: 2px solid var(--pos); outline-offset: 2px; border-radius: 4px; }
 th[aria-sort] { color: var(--ink); }
-td.cell { text-align: left; min-width: 104px; }
+td.cell { text-align: left; min-width: 104px; padding: 0; }
+button.pcell {
+  all: unset; box-sizing: border-box; display: block; width: 100%; padding: 6px 10px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button.pcell:hover .pname { color: var(--ink); text-decoration: underline dotted; text-underline-offset: 2px; }
+button.pcell:focus-visible { outline: 2px solid var(--pos); outline-offset: -2px; border-radius: 4px; }
+.star { color: var(--live); font-weight: 700; font-size: 12px; margin-left: 1px; }
+/* Game state at a glance: yet to play is faded with its kickoff time, playing has an orange edge
+   and orange points, done is plain. */
+td.cell.not_started .pname, td.cell.not_started .pts { opacity: 0.6; }
+.kick { font-size: 12px; font-weight: 500; color: var(--muted); }
+td.cell.live button.pcell { box-shadow: inset 3px 0 0 var(--live); }
+td.cell.live .pts { color: var(--live); }
+td.cell.live.win .pts { color: var(--win-ink); }
+dialog#card {
+  border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 12px; width: min(92vw, 380px);
+  background: var(--card); color: var(--ink); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+dialog#card::backdrop { background: rgba(0, 0, 0, 0.35); }
+.card-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.card-head > div { flex: 1 1 auto; min-width: 0; }
+.card-name { font-weight: 700; font-size: 17px; }
+.card-sub { color: var(--muted); font-size: 13px; }
+.card-sub.live { color: var(--live); }
+.card-score { color: var(--ink); font-size: 13px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+button.card-close { min-height: 32px; padding: 0 10px; font-size: 20px; line-height: 1; border: 0; background: transparent; color: var(--muted); }
+table.card-stats th, table.card-stats td { padding: 5px 4px; white-space: normal; }
+table.card-stats th { position: static; text-align: left; color: var(--muted); font-size: 13px; font-weight: 600; width: 3.2em; background: none; }
+table.card-stats td.line { text-align: left; }
+table.card-stats td.cpts { color: var(--muted); white-space: nowrap; }
+.card-msg { color: var(--muted); margin: 4px 0 8px; }
+.card-total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--line); padding: 8px 4px 0; margin-top: 2px; }
+.card-total strong { font-size: 18px; }
+.card-note { margin: 8px 4px 2px; font-size: 13px; color: var(--muted); }
+.card-note strong { color: var(--live); }
 .pname { display: block; font-size: 12px; color: var(--muted); }
 .pts { font-weight: 600; font-size: 16px; }
 .tag { margin-left: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); }
@@ -114,7 +149,8 @@ body.empty section, body.empty #week, body.noweek section.week, body.nosettlemen
     <h2>Accumulated standings</h2>
     <div id="standings"></div>
   </section>
-  <footer>Stats from ESPN. Live scores refresh on their own while games are on.</footer>
+  <footer>Stats from ESPN. Live scores refresh on their own while games are on. Tap a player for their stats.</footer>
+  <dialog id="card" aria-label="Player stats"><div id="card-body"></div></dialog>
 </main>
 <script type="module" src="js/app.js"></script>
 </body>

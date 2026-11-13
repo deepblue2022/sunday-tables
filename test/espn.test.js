@@ -44,7 +44,7 @@ test("parseScoreboard: no week block means no bye teams", () => {
 
 test("parseGame: stat lines are keyed by athlete id and merged across categories", () => {
   const g = parseGame(fixture("2026-09/game-401873049.json"));
-  assert.deepEqual(g.stats["4036378"], { passYds: 372, passTD: 3, rushYds: 13, rushTD: 1 }); // Jordan Love
+  assert.deepEqual(g.stats["4036378"], { passCmp: 23, passAtt: 29, passYds: 372, passTD: 3, rushAtt: 1, rushYds: 13, rushTD: 1 }); // Jordan Love
 });
 
 test("parseGame: successful 2-pt run is credited, failed attempts are not", () => {
@@ -124,14 +124,27 @@ test("parseGame: receiving lines map to recYds and recTD", () => {
   const raw = fixture("2026-09/game-401873049.json");
   const rec = raw.boxscore.players.flatMap((t) => t.statistics).filter((s) => s.name === "receiving").flatMap((s) => s.athletes);
   const watson = rec.find((a) => a.athlete.displayName === "Christian Watson");
-  assert.deepEqual(parseGame(raw).stats[watson.athlete.id], { recYds: 171, recTD: 1 });
+  assert.deepEqual(parseGame(raw).stats[watson.athlete.id], { rec: 7, recYds: 171, recTD: 1 });
 });
 
 test("parseGame: junk or missing stat values become 0", () => {
   const g = parseGame({
     boxscore: { players: [{ statistics: [{ name: "rushing", keys: ["rushingAttempts", "rushingYards", "rushingTouchdowns"], athletes: [{ athlete: { id: 7 }, stats: ["1", "--"] }] }] }] },
   });
-  assert.deepEqual(g.stats["7"], { rushYds: 0, rushTD: 0 });
+  assert.deepEqual(g.stats["7"], { rushAtt: 1, rushYds: 0, rushTD: 0 });
+});
+
+test("parseGame: completions/attempts split into passCmp and passAtt, junk becomes 0", () => {
+  const passing = (value) =>
+    parseGame({ boxscore: { players: [{ statistics: [{ name: "passing", keys: ["completions/passingAttempts"], athletes: [{ athlete: { id: 3 }, stats: [value] }] }] }] } }).stats["3"];
+  assert.deepEqual(passing("16/26"), { passCmp: 16, passAtt: 26 });
+  assert.deepEqual(passing("--"), { passCmp: 0, passAtt: 0 });
+});
+
+test("parseScoreboard: home is the competitor ESPN marks as home, or null when it does not say", () => {
+  const ev = (comps) => ({ events: [{ id: 1, competitions: [{ competitors: comps }], status: { type: { state: "pre" } } }] });
+  assert.equal(parseScoreboard(ev([{ homeAway: "home", team: { abbreviation: "WSH" } }, { homeAway: "away", team: { abbreviation: "NYG" } }])).games[0].home, "WSH");
+  assert.equal(parseScoreboard(ev([{ team: { abbreviation: "WSH" } }, { team: { abbreviation: "NYG" } }])).games[0].home, null);
 });
 
 test("parseGame: 2-pt names never cross a parenthesis, and each parenthetical is judged on its own", () => {

@@ -6,15 +6,42 @@ import { build } from "./helpers.js";
 
 // One rostered player "p" on team AAA, in a week file built by the helper (everyone else is on AAA too).
 const game = (phase, id = "g1", teams = ["AAA", "BBB"]) => ({ id, teams, phase, kickoff: "2026-11-08T18:00Z" });
-const one = (scoreboard, gamesById, player = { name: "Pat Player", id: "p", team: "AAA" }) => {
+const full = (scoreboard, gamesById, player = { name: "Pat Player", id: "p", team: "AAA" }) => {
   const { weekFile } = build();
   weekFile.team_table.rosters.Art[0] = player;
   return derivePlayers(weekFile, scoreboard, gamesById).p;
+};
+// Points and state only (the stat line and game details are checked in their own tests below).
+const one = (...args) => {
+  const { points, state } = full(...args);
+  return { points, state };
 };
 const loaded = (stats = {}, twoPt = []) => ({ g1: { stats, twoPt } });
 
 test("finished game: a stat line makes the player final with points", () => {
   assert.deepEqual(one({ games: [game("done")], byeTeams: [] }, loaded({ p: { rushYds: 107, rushTD: 1 } })), { points: 16, state: "final" });
+});
+
+test("a player's stat line (with any 2-pt points) and game are kept for the stats card", () => {
+  const twoPt = [{ name: "Pat Player", team: "AAA", points: 2 }];
+  const r = full({ games: [{ ...game("done"), home: "BBB" }], byeTeams: [] }, loaded({ p: { rushAtt: 18, rushYds: 107, rushTD: 1 } }, twoPt));
+  assert.deepEqual(r, {
+    points: 18,
+    state: "final",
+    stats: { rushAtt: 18, rushYds: 107, rushTD: 1, twoPt: 2 },
+    game: { opp: "BBB", home: false, kickoff: "2026-11-08T18:00Z" },
+  });
+});
+
+test("a game not yet played has game details but no stat line; a bye has neither", () => {
+  assert.deepEqual(full({ games: [{ ...game("pre"), home: "AAA" }], byeTeams: [] }, {}), {
+    points: 0,
+    state: "not_started",
+    game: { opp: "BBB", home: true, kickoff: "2026-11-08T18:00Z" },
+  });
+  assert.deepEqual(full({ games: [game("done", "g1", ["CCC", "DDD"])], byeTeams: ["AAA"] }, {}), { points: 0, state: "bye" });
+  // home team unknown (ESPN did not say): home is null rather than a guess
+  assert.equal(full({ games: [game("pre")], byeTeams: [] }, {}).game.home, null);
 });
 
 test("finished game: no stat line and no 2-pt is did-not-play with 0", () => {

@@ -13,20 +13,32 @@ function phaseOf(type) {
 }
 
 export function parseScoreboard(json) {
-  const games = (json.events ?? []).map((e) => ({
-    id: String(e.id),
-    teams: e.competitions[0].competitors.map((c) => c.team.abbreviation),
-    phase: phaseOf(e.status?.type),
-    kickoff: e.date,
-  }));
+  const games = (json.events ?? []).map((e) => {
+    const comps = e.competitions[0].competitors;
+    const phase = phaseOf(e.status?.type);
+    const game = {
+      id: String(e.id),
+      teams: comps.map((c) => c.team.abbreviation),
+      home: comps.find((c) => c.homeAway === "home")?.team.abbreviation ?? null,
+      phase,
+      kickoff: e.date,
+    };
+    // Score and status text ("8:42 - 3rd", "Halftime", "Final/OT") once the game is under way.
+    if (phase === "in" || phase === "done") {
+      const score = Object.fromEntries(comps.map((c) => [c.team.abbreviation, Number(c.score)]));
+      if (Object.values(score).every(Number.isFinite)) game.score = score;
+      if (e.status?.type?.shortDetail) game.detail = String(e.status.type.shortDetail);
+    }
+    return game;
+  });
   const byeTeams = (json.week?.teamsOnBye ?? []).map((t) => t.abbreviation);
   return { games, byeTeams };
 }
 
 const STAT_KEYS = {
-  passing: { passingYards: "passYds", passingTouchdowns: "passTD" },
-  rushing: { rushingYards: "rushYds", rushingTouchdowns: "rushTD" },
-  receiving: { receivingYards: "recYds", receivingTouchdowns: "recTD" },
+  passing: { "completions/passingAttempts": ["passCmp", "passAtt"], passingYards: "passYds", passingTouchdowns: "passTD" },
+  rushing: { rushingAttempts: "rushAtt", rushingYards: "rushYds", rushingTouchdowns: "rushTD" },
+  receiving: { receptions: "rec", receivingYards: "recYds", receivingTouchdowns: "recTD" },
 };
 const toNumber = (v) => {
   const n = Number(v);
@@ -46,7 +58,14 @@ export function parseGame(json) {
       for (const a of group.athletes ?? []) {
         const line = (stats[String(a.athlete.id)] ??= {});
         group.keys.forEach((key, i) => {
-          if (wanted[key]) line[wanted[key]] = toNumber(a.stats[i]);
+          const field = wanted[key];
+          if (Array.isArray(field)) {
+            // a combined stat such as "16/26" (completions/attempts)
+            const parts = String(a.stats[i] ?? "").split("/");
+            field.forEach((f, j) => (line[f] = toNumber(parts[j])));
+          } else if (field) {
+            line[field] = toNumber(a.stats[i]);
+          }
         });
       }
     }

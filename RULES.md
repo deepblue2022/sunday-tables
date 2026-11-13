@@ -35,6 +35,11 @@ All commands run from this folder. The site is the files in this folder; publish
 settlement against the old spreadsheet, subtract it from the baseline totals, set `through_week` one lower,
 then record the week. `resolve` uses the team each player played for that week, so traded players score correctly.
 
+**Settled corrections:** if a week was paid on a score that differs from the rules, keep the paid number
+as the player's `points` in the recorded week and add `"override": {"rules": <rules points>, "reason": "..."}`.
+The site marks the score with a `*` and the stats card shows both numbers. The tests check that every other
+saved score matches its stat line exactly.
+
 **Cancelled or postponed games:** the site leaves that week provisional and the players show "?".
 The scorekeeper decides how to settle it.
 

@@ -86,7 +86,7 @@ test("unknown players block final; a missing id counts as unknown with 0", () =>
   const r = scoreWeek(weekFile, playersById, league);
   assert.equal(r.final, false);
   assert.equal(r.team.provisional, true);
-  assert.deepEqual(r.team.rows.Art.players[0], { name: "Art T0", id: "T-Art-0", points: 0, state: "unknown" });
+  assert.deepEqual(r.team.rows.Art.players[0], { name: "Art T0", id: "T-Art-0", team: "AAA", points: 0, state: "unknown" });
   assert.equal(r.team.rows.Art.total, 36);
 });
 

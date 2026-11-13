@@ -1,4 +1,5 @@
 // Presentation helpers: pure string builders, no DOM. Shared by the page and the CLI.
+import { pointsBreakdown, statsPoints } from "./scoring.js";
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
@@ -26,10 +27,19 @@ const moneyCell = (cents, extra = "") => {
   return `<td class="${extra}money${sign}">${esc(fmtMoney(cents))}</td>`;
 };
 const note = (text) => `<span class="note">${esc(text)}</span>`;
-const playerCell = (c, highlight) => {
+// A player's box. `key` lets the page find the player again when the box is tapped for the stats card.
+// A player yet to play shows his kickoff time (via `fmtKickoff`) in place of the dash, when known.
+const playerCell = (c, highlight, key, fmtKickoff = null) => {
   const tag = STATE_TAG[c.state] ? `<span class="tag ${c.state}">${STATE_TAG[c.state]}</span>` : "";
-  const points = showsDash(c.state) ? DASH : c.points;
-  return `<td class="cell${highlight ? " win" : ""} ${esc(c.state)}"><span class="pname">${esc(c.name)}</span><span class="pts">${esc(points)}</span>${tag}</td>`;
+  const kick = c.state === "not_started" && c.game?.kickoff && fmtKickoff ? fmtKickoff(c.game.kickoff) : null;
+  const points = kick ? `<span class="kick">${esc(kick)}</span>` : esc(showsDash(c.state) ? DASH : c.points);
+  const star = c.override ? `<sup class="star" aria-hidden="true">*</sup>` : "";
+  const label = `${c.name}, ${showsDash(c.state) ? "no score yet" : `${c.points} points`}${c.override ? " (settled score)" : ""}. Show stats`;
+  return (
+    `<td class="cell${highlight ? " win" : ""} ${esc(c.state)}">` +
+    `<button type="button" class="pcell" data-card="${esc(key)}" aria-label="${esc(label)}">` +
+    `<span class="pname">${esc(c.name)}</span><span class="pts">${points}</span>${star}${tag}</button></td>`
+  );
 };
 const wrap = (table, provisional) => `<div class="table-wrap${provisional ? " prov" : ""}">${table}</div>`;
 const rowHead = (owner) => `<th scope="row">${esc(owner.display)}</th>`;
@@ -37,14 +47,15 @@ const names = (keys, league) => keys.map((k) => league.owners.find((o) => o.key 
 // A contest where everybody is level (typically all on 0) has no winner worth highlighting.
 const highlighted = (winners, league) => (winners.length < league.owners.length ? winners : []);
 
-export function renderTeamTable(result, league, columns) {
+// `fmtKickoff` (optional) formats an ISO kickoff time for players yet to play.
+export function renderTeamTable(result, league, columns, fmtKickoff = null) {
   const { team } = result;
   const win = highlighted(team.winners, league);
   const head = `<tr><th>Team</th>${columns.map((c) => `<th>${esc(c)}</th>`).join("")}<th>Total</th></tr>`;
   const rows = league.owners
     .map((o) => {
       const row = team.rows[o.key];
-      const cells = row.players.map((c) => playerCell(c, false)).join("");
+      const cells = row.players.map((c, i) => playerCell(c, false, `t|${o.key}|${i}`, fmtKickoff)).join("");
       return `<tr${win.includes(o.key) ? ' class="win"' : ""}>\n${rowHead(o)}${cells}<td class="total">${esc(row.total)}</td></tr>`;
     })
     .join("\n");
@@ -58,7 +69,7 @@ export function renderTeamTable(result, league, columns) {
   return `${wrap(table, team.provisional)}<p class="pot">${esc(line)}</p>`;
 }
 
-export function renderLightning(result, league) {
+export function renderLightning(result, league, fmtKickoff = null) {
   const cols = result.lightning.columns;
   const head = (extra) => {
     const cells = cols.map((c) => `<th>${esc(c.name)}${c.provisional && c.started ? note("provisional") : ""}</th>`).join("");
@@ -66,7 +77,7 @@ export function renderLightning(result, league) {
   };
   const players = league.owners
     .map((o) => {
-      const cells = cols.map((c) => playerCell(c.cells[o.key], highlighted(c.winners, league).includes(o.key))).join("");
+      const cells = cols.map((c, i) => playerCell(c.cells[o.key], highlighted(c.winners, league).includes(o.key), `l|${i}|${o.key}`, fmtKickoff)).join("");
       return `<tr>${rowHead(o)}${cells}</tr>`;
     })
     .join("\n");
@@ -82,6 +93,96 @@ export function renderLightning(result, league) {
     `<h3>$ by column</h3>` +
     wrap(`<table class="grid"><thead>${head("<th>Net</th>")}</thead><tbody>\n${money}\n</tbody></table>`, anyProv)
   );
+}
+
+// ---------- Stats card (shown when a player's box is tapped) ----------
+
+const yds = (n) => `${n < 0 ? "−" : ""}${Math.abs(n)} yds`;
+const td = (n) => (n ? `, ${n} TD` : "");
+const pts = (yardPts, tdPts) => (tdPts ? `${yardPts} + ${tdPts}` : `${yardPts}`);
+const n0 = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+
+// The stat lines of a saved stat line, one per category the player touched.
+export function statRows(stats) {
+  const s = Object.fromEntries(Object.entries(stats ?? {}).map(([k, v]) => [k, n0(v)]));
+  const b = pointsBreakdown(s, s.twoPt);
+  const rows = [];
+  if (s.passAtt || s.passCmp || s.passYds || s.passTD) {
+    rows.push({ label: "Pass", line: `${s.passCmp ?? 0}/${s.passAtt ?? 0}, ${yds(s.passYds ?? 0)}${td(s.passTD)}`, points: pts(b.pass.yards, b.pass.td) });
+  }
+  if (s.rushAtt || s.rushYds || s.rushTD) {
+    rows.push({ label: "Rush", line: `${s.rushAtt ?? 0} car, ${yds(s.rushYds ?? 0)}${td(s.rushTD)}`, points: pts(b.rush.yards, b.rush.td) });
+  }
+  if (s.rec || s.recYds || s.recTD) {
+    rows.push({ label: "Rec", line: `${s.rec ?? 0} rec, ${yds(s.recYds ?? 0)}${td(s.recTD)}`, points: pts(b.rec.yards, b.rec.td) });
+  }
+  if (b.twoPt) rows.push({ label: "2-pt", line: "conversion", points: String(b.twoPt) });
+  return rows;
+}
+
+const STATE_LABEL = { live: "LIVE", final: "Final", dnp: "Did not play", bye: "Bye week", not_started: "Not started", unknown: "Not settled" };
+
+// The card's HTML for one player box. `context` is e.g. "Kevin · QB3"; `fmtKickoff` formats an
+// ISO kickoff time for a game not started yet; `loaded` is false while no live scores have
+// loaded yet (every player then shows as unknown, which says nothing about their game).
+export function renderCard(cell, context = "", fmtKickoff = null, loaded = true) {
+  const g = cell.game;
+  const matchup = g?.opp ? `${cell.team} ${g.home === true ? "vs" : g.home === false ? "@" : "v"} ${g.opp}` : cell.team ?? "";
+  if (!loaded) {
+    const sub = [context, matchup].filter(Boolean).map(esc).join(" · ");
+    return (
+      `<div class="card-head"><div><div class="card-name">${esc(cell.name)}</div><div class="card-sub">${sub}</div></div>` +
+      `<button type="button" class="card-close" data-close aria-label="Close">×</button></div>` +
+      `<p class="card-msg">Scores not loaded yet.</p>`
+    );
+  }
+  let state = STATE_LABEL[cell.state] ?? "";
+  if (cell.state === "not_started" && g?.kickoff && fmtKickoff) state = `Kickoff ${fmtKickoff(g.kickoff)}`;
+  const sub = [context, matchup, state].filter(Boolean).map(esc).join(" · ");
+  // Second line once the game is under way: "WSH 17 – NYG 10 · 8:42 - 3rd" (a saved week: "· Final").
+  let scoreLine = "";
+  if (g?.score && g.opp && ["live", "final", "dnp"].includes(cell.state)) {
+    const status = cell.state === "live" ? g.detail : g.detail ?? "Final";
+    scoreLine = [`${cell.team} ${g.score.team} – ${g.opp} ${g.score.opp}`, status].filter(Boolean).map(esc).join(" · ");
+  }
+  const head =
+    `<div class="card-head"><div><div class="card-name">${esc(cell.name)}</div><div class="card-sub${cell.state === "live" ? " live" : ""}">${sub}</div>` +
+    (scoreLine ? `<div class="card-score">${scoreLine}</div>` : "") +
+    `</div>` +
+    `<button type="button" class="card-close" data-close aria-label="Close">×</button></div>`;
+
+  const rows = statRows(cell.stats);
+  let body;
+  if (rows.length) {
+    body = `<table class="card-stats"><tbody>${rows
+      .map((r) => `<tr><th scope="row">${esc(r.label)}</th><td class="line">${esc(r.line)}</td><td class="cpts">${esc(r.points)}</td></tr>`)
+      .join("")}</tbody></table>`;
+  } else if (cell.state === "final" && !cell.stats) {
+    body = `<p class="card-msg">Stat line not saved for this week.</p>`;
+  } else {
+    const msg = {
+      live: "No scoring stats yet.",
+      final: "No scoring stats.",
+      dnp: "No stats in the box score.",
+      bye: "Team on bye: scores 0.",
+      not_started: "Game not started yet.",
+      unknown: "Game not finished or not found: the scorekeeper will settle it.",
+    }[cell.state];
+    body = `<p class="card-msg">${esc(msg ?? "")}</p>`;
+  }
+
+  let foot = "";
+  if (cell.override) {
+    const rules = cell.stats ? statsPoints(cell.stats) : cell.override.rules;
+    foot =
+      `<div class="card-total"><span>By the rules</span><strong>${esc(rules)}</strong></div>` +
+      `<p class="card-note"><strong>* Settled at ${esc(cell.points)}</strong>, the official score.` +
+      (cell.override.reason ? ` ${esc(cell.override.reason)}` : "") +
+      `</p>`;
+  } else if (!showsDash(cell.state) && cell.state !== "bye") {
+    foot = `<div class="card-total"><span>${cell.state === "live" ? "So far" : "Total"}</span><strong>${esc(cell.points)}</strong></div>`;
+  }
+  return head + body + foot;
 }
 
 // ---------- Sorting (settlement and standings tables) ----------

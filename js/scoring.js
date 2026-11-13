@@ -11,13 +11,25 @@ const num = (v) => {
 };
 const yards = (v, per) => Math.floor(Math.max(num(v), 0) / per);
 
-export function playerPoints(statLine, twoPt = 0) {
+// How a stat line turns into points, one entry per category: yards points, touchdown points.
+// playerPoints is the sum, so the stats card and the scores can never disagree.
+export function pointsBreakdown(statLine, twoPt = 0) {
   const s = statLine || {};
-  return (
-    yards(s.passYds, 20) + yards(s.rushYds, 10) + yards(s.recYds, 10) +
-    3 * num(s.passTD) + 6 * (num(s.rushTD) + num(s.recTD)) + num(twoPt)
-  );
+  return {
+    pass: { yards: yards(s.passYds, 20), td: 3 * num(s.passTD) },
+    rush: { yards: yards(s.rushYds, 10), td: 6 * num(s.rushTD) },
+    rec: { yards: yards(s.recYds, 10), td: 6 * num(s.recTD) },
+    twoPt: num(twoPt),
+  };
 }
+
+export function playerPoints(statLine, twoPt = 0) {
+  const b = pointsBreakdown(statLine, twoPt);
+  return b.pass.yards + b.pass.td + b.rush.yards + b.rush.td + b.rec.yards + b.rec.td + b.twoPt;
+}
+
+// Points by the rules for a saved stat line ({...line, twoPt}).
+export const statsPoints = (stats) => playerPoints(stats, stats?.twoPt ?? 0);
 
 // Split totalCents among winners; leftover cents go one each in ownerOrder.
 export function splitCents(totalCents, winners, ownerOrder) {
@@ -103,7 +115,11 @@ export function scoreWeek(weekFile, playersById, league) {
     if (!STATES.includes(r.state)) {
       throw new Error(`Week file ${weekLabel(weekFile)}: unknown state for ${p.name}`);
     }
-    return { name: p.name, id: p.id, points: r.points, state: r.state };
+    const out = { name: p.name, id: p.id, team: p.team, points: r.points, state: r.state };
+    if (r.stats) out.stats = r.stats;
+    if (r.game) out.game = r.game;
+    if (r.override) out.override = r.override;
+    return out;
   };
 
   // Team table: highest total takes the pot.
@@ -214,6 +230,7 @@ export function derivePlayers(weekFile, scoreboard, gamesById) {
     const game = games.length === 1 ? games[0] : null;
     let state = "unknown";
     let points = 0;
+    let stats = null;
     if (!game) {
       if (!games.length && scoreboard.byeTeams.includes(p.team)) state = "bye";
     } else if (game.phase === "pre") {
@@ -223,12 +240,21 @@ export function derivePlayers(weekFile, scoreboard, gamesById) {
       if (summary) {
         const line = summary.stats[p.id];
         const twoPt = summary.twoPt.filter((t) => t.name === p.name && t.team === p.team);
-        points = playerPoints(line, twoPt.reduce((a, t) => a + t.points, 0));
+        const twoPtPoints = twoPt.reduce((a, t) => a + t.points, 0);
+        points = playerPoints(line, twoPtPoints);
+        if (line || twoPt.length) stats = { ...line, ...(twoPtPoints ? { twoPt: twoPtPoints } : {}) };
         if (game.phase === "in") state = "live";
         else state = line || twoPt.length ? "final" : "dnp";
       }
     }
     out[p.id] = { points, state };
+    if (stats) out[p.id].stats = stats;
+    if (game) {
+      const opp = game.teams.find((t) => t !== p.team) ?? null;
+      out[p.id].game = { opp, home: game.home ? game.home === p.team : null, kickoff: game.kickoff ?? null };
+      if (game.score && opp) out[p.id].game.score = { team: game.score[p.team], opp: game.score[opp] };
+      if (game.detail) out[p.id].game.detail = game.detail;
+    }
   }
   return out;
 }
