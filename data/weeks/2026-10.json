@@ -1,0 +1,476 @@
+{
+ "season": 2026,
+ "week": 10,
+ "team_table": {
+  "columns": [
+   "QB",
+   "RB",
+   "RB",
+   "WR",
+   "WR"
+  ],
+  "rosters": {
+   "Art": [
+    {
+     "name": "Josh Allen",
+     "id": "3918298",
+     "team": "BUF"
+    },
+    {
+     "name": "Jahmyr Gibbs",
+     "id": "4429795",
+     "team": "DET"
+    },
+    {
+     "name": "Kenneth Walker III",
+     "id": "4567048",
+     "team": "KC"
+    },
+    {
+     "name": "Jaxon Smith-Njigba",
+     "id": "4430878",
+     "team": "SEA"
+    },
+    {
+     "name": "Ja'Marr Chase",
+     "id": "4362628",
+     "team": "CIN"
+    }
+   ],
+   "Mxue": [
+    {
+     "name": "Josh Allen",
+     "id": "3918298",
+     "team": "BUF"
+    },
+    {
+     "name": "Jahmyr Gibbs",
+     "id": "4429795",
+     "team": "DET"
+    },
+    {
+     "name": "Kenneth Walker III",
+     "id": "4567048",
+     "team": "KC"
+    },
+    {
+     "name": "Jaxon Smith-Njigba",
+     "id": "4430878",
+     "team": "SEA"
+    },
+    {
+     "name": "Ja'Marr Chase",
+     "id": "4362628",
+     "team": "CIN"
+    }
+   ],
+   "Vince": [
+    {
+     "name": "Brock Purdy",
+     "id": "4361741",
+     "team": "SF"
+    },
+    {
+     "name": "James Cook III",
+     "id": "4379399",
+     "team": "BUF"
+    },
+    {
+     "name": "Kenneth Walker III",
+     "id": "4567048",
+     "team": "KC"
+    },
+    {
+     "name": "Ja'Marr Chase",
+     "id": "4362628",
+     "team": "CIN"
+    },
+    {
+     "name": "Amon-Ra St. Brown",
+     "id": "4374302",
+     "team": "DET"
+    }
+   ],
+   "Kevin": [
+    {
+     "name": "Joe Burrow",
+     "id": "3915511",
+     "team": "CIN"
+    },
+    {
+     "name": "Christian McCaffrey",
+     "id": "3117251",
+     "team": "SF"
+    },
+    {
+     "name": "Kenneth Walker III",
+     "id": "4567048",
+     "team": "KC"
+    },
+    {
+     "name": "Jaxon Smith-Njigba",
+     "id": "4430878",
+     "team": "SEA"
+    },
+    {
+     "name": "Ja'Marr Chase",
+     "id": "4362628",
+     "team": "CIN"
+    }
+   ],
+   "Galli": [
+    {
+     "name": "Josh Allen",
+     "id": "3918298",
+     "team": "BUF"
+    },
+    {
+     "name": "Jahmyr Gibbs",
+     "id": "4429795",
+     "team": "DET"
+    },
+    {
+     "name": "Kenneth Walker III",
+     "id": "4567048",
+     "team": "KC"
+    },
+    {
+     "name": "Jaxon Smith-Njigba",
+     "id": "4430878",
+     "team": "SEA"
+    },
+    {
+     "name": "CeeDee Lamb",
+     "id": "4241389",
+     "team": "DAL"
+    }
+   ],
+   "JD": [
+    {
+     "name": "Joe Burrow",
+     "id": "3915511",
+     "team": "CIN"
+    },
+    {
+     "name": "Jahmyr Gibbs",
+     "id": "4429795",
+     "team": "DET"
+    },
+    {
+     "name": "Chuba Hubbard",
+     "id": "4241416",
+     "team": "CAR"
+    },
+    {
+     "name": "Ja'Marr Chase",
+     "id": "4362628",
+     "team": "CIN"
+    },
+    {
+     "name": "CeeDee Lamb",
+     "id": "4241389",
+     "team": "DAL"
+    }
+   ],
+   "JohnO": [
+    {
+     "name": "Josh Allen",
+     "id": "3918298",
+     "team": "BUF"
+    },
+    {
+     "name": "Christian McCaffrey",
+     "id": "3117251",
+     "team": "SF"
+    },
+    {
+     "name": "Kenneth Walker III",
+     "id": "4567048",
+     "team": "KC"
+    },
+    {
+     "name": "Jaxon Smith-Njigba",
+     "id": "4430878",
+     "team": "SEA"
+    },
+    {
+     "name": "CeeDee Lamb",
+     "id": "4241389",
+     "team": "DAL"
+    }
+   ]
+  }
+ },
+ "lightning_table": {
+  "columns": [
+   "QB2",
+   "RB2",
+   "QB3",
+   "WR2",
+   "QB4",
+   "RB3",
+   "WR3"
+  ],
+  "rosters": {
+   "Art": [
+    {
+     "name": "Jared Goff",
+     "id": "3046779",
+     "team": "DET"
+    },
+    {
+     "name": "Derrick Henry",
+     "id": "3043078",
+     "team": "BAL"
+    },
+    {
+     "name": "Matthew Stafford",
+     "id": "12483",
+     "team": "LAR"
+    },
+    {
+     "name": "Tee Higgins",
+     "id": "4239993",
+     "team": "CIN"
+    },
+    {
+     "name": "Justin Herbert",
+     "id": "4038941",
+     "team": "LAC"
+    },
+    {
+     "name": "Breece Hall",
+     "id": "4427366",
+     "team": "NYJ"
+    },
+    {
+     "name": "Jameson Williams",
+     "id": "4426388",
+     "team": "DET"
+    }
+   ],
+   "Mxue": [
+    {
+     "name": "Tyler Shough",
+     "id": "4360689",
+     "team": "NO"
+    },
+    {
+     "name": "Jonathan Taylor",
+     "id": "4242335",
+     "team": "IND"
+    },
+    {
+     "name": "Jordan Love",
+     "id": "4036378",
+     "team": "GB"
+    },
+    {
+     "name": "Christian Watson",
+     "id": "4248528",
+     "team": "GB"
+    },
+    {
+     "name": "Geno Smith",
+     "id": "15864",
+     "team": "NYJ"
+    },
+    {
+     "name": "Cam Skattebo",
+     "id": "4696981",
+     "team": "NYG"
+    },
+    {
+     "name": "Zay Flowers",
+     "id": "4429615",
+     "team": "BAL"
+    }
+   ],
+   "Vince": [
+    {
+     "name": "Drake Maye",
+     "id": "4431452",
+     "team": "NE"
+    },
+    {
+     "name": "Bhayshul Tuten",
+     "id": "4882093",
+     "team": "JAX"
+    },
+    {
+     "name": "Kirk Cousins",
+     "id": "14880",
+     "team": "MIN"
+    },
+    {
+     "name": "Justin Jefferson",
+     "id": "4262921",
+     "team": "MIN"
+    },
+    {
+     "name": "Daniel Jones",
+     "id": "3917792",
+     "team": "IND"
+    },
+    {
+     "name": "Tony Pollard",
+     "id": "3916148",
+     "team": "TEN"
+    },
+    {
+     "name": "Nico Collins",
+     "id": "4258173",
+     "team": "HOU"
+    }
+   ],
+   "Kevin": [
+    {
+     "name": "Dak Prescott",
+     "id": "2577417",
+     "team": "DAL"
+    },
+    {
+     "name": "Bijan Robinson",
+     "id": "4430807",
+     "team": "ATL"
+    },
+    {
+     "name": "Jayden Daniels",
+     "id": "4426348",
+     "team": "WSH"
+    },
+    {
+     "name": "Parker Washington",
+     "id": "4432620",
+     "team": "JAX"
+    },
+    {
+     "name": "Fernando Mendoza",
+     "id": "4837248",
+     "team": "LV"
+    },
+    {
+     "name": "Chase Brown",
+     "id": "4362238",
+     "team": "CIN"
+    },
+    {
+     "name": "Brock Bowers",
+     "id": "4432665",
+     "team": "LV"
+    }
+   ],
+   "Galli": [
+    {
+     "name": "Trevor Lawrence",
+     "id": "4360310",
+     "team": "JAX"
+    },
+    {
+     "name": "Kyren Williams",
+     "id": "4430737",
+     "team": "LAR"
+    },
+    {
+     "name": "Aaron Rodgers",
+     "id": "8439",
+     "team": "PIT"
+    },
+    {
+     "name": "Chris Olave",
+     "id": "4361370",
+     "team": "NO"
+    },
+    {
+     "name": "Jacoby Brissett",
+     "id": "2578570",
+     "team": "BAL"
+    },
+    {
+     "name": "Tyler Allgeier",
+     "id": "4373626",
+     "team": "ARI"
+    },
+    {
+     "name": "Tetairoa McMillan",
+     "id": "4685472",
+     "team": "CAR"
+    }
+   ],
+   "JD": [
+    {
+     "name": "C.J. Stroud",
+     "id": "4432577",
+     "team": "HOU"
+    },
+    {
+     "name": "Jaylen Warren",
+     "id": "4569987",
+     "team": "PIT"
+    },
+    {
+     "name": "J.J. McCarthy",
+     "id": "4433970",
+     "team": "NYG"
+    },
+    {
+     "name": "Matthew Golden",
+     "id": "4701936",
+     "team": "GB"
+    },
+    {
+     "name": "Deshaun Watson",
+     "id": "3122840",
+     "team": "CLE"
+    },
+    {
+     "name": "Zach Charbonnet",
+     "id": "4426385",
+     "team": "SEA"
+    },
+    {
+     "name": "George Kittle",
+     "id": "3040151",
+     "team": "SF"
+    }
+   ],
+   "JohnO": [
+    {
+     "name": "Patrick Mahomes",
+     "id": "3139477",
+     "team": "KC"
+    },
+    {
+     "name": "Ollie Gordon II",
+     "id": "4711533",
+     "team": "MIA"
+    },
+    {
+     "name": "Bryce Young",
+     "id": "4685720",
+     "team": "CAR"
+    },
+    {
+     "name": "Malik Nabers",
+     "id": "4595348",
+     "team": "NYG"
+    },
+    {
+     "name": "Drew Lock",
+     "id": "3924327",
+     "team": "SEA"
+    },
+    {
+     "name": "Javonte Williams",
+     "id": "4361579",
+     "team": "DAL"
+    },
+    {
+     "name": "Drake London",
+     "id": "4426502",
+     "team": "ATL"
+    }
+   ]
+  }
+ }
+}
