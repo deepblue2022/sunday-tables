@@ -184,3 +184,13 @@ test("recordWeek keeps the final score but not the live status text", () => {
   const out = recordWeek(weekFile, playersById, scoreWeek(weekFile, playersById, league), {});
   assert.deepEqual(out.recorded.players["T-Art-0"].game, { opp: "BBB", home: true, score: { team: 24, opp: 21 } });
 });
+
+test("standings: the Total is labelled live and provisional while a provisional week counts in it", async () => {
+  const { renderStandings } = await import("../js/render.js");
+  const st = (open) => ({ recordedThrough: 9, base: {}, open, totals: {}, order: {}, history: [{ week: 9, totals: {} }] });
+  const amounts = Object.fromEntries(league.owners.map((o) => [o.key, 0]));
+  assert.match(renderStandings(st([{ week: 10, provisional: true, amounts }]), league), /Total \(live\)<span class="note">provisional<\/span>/);
+  assert.doesNotMatch(renderStandings(st([{ week: 10, provisional: false, amounts }]), league), /Total \(live\)/);
+  assert.doesNotMatch(renderStandings(st([{ week: 10, provisional: true, amounts: null }]), league), /Total \(live\)/);
+  assert.match(renderStandings(st([]), league), />Total</);
+});

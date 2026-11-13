@@ -254,12 +254,15 @@ export function renderStandings(standings, league, sort = null, thruWeek = null)
       `<button type="button" class="sort inline" data-sort="base" aria-label="Sort by this column">${arrow}</button></th>`
     );
   };
+  // While a week still counting in the total is provisional, the total (and the order) move with it.
+  const live = open.some((w) => w.amounts && w.provisional);
+  const totalLabel = live ? `Total (live)${note("provisional")}` : "Total";
   const weekKey = (w) => `wk-${w.week}`;
   const weekHead = (w) =>
     sortHead(weekKey(w), `Wk ${esc(w.week)}${w.amounts ? (w.provisional ? note("provisional") : "") : note("not loaded")}`, sort);
   const head =
     `<tr>${sortHead("team", "Team", sort)}${thruHead()}` +
-    `${open.map(weekHead).join("")}${sortHead("total", "Total", sort)}${sortHead("order", "Order", sort)}</tr>`;
+    `${open.map(weekHead).join("")}${sortHead("total", totalLabel, sort)}${sortHead("order", "Order", sort)}</tr>`;
   const value = (o) => {
     if (sort.key === "team") return o.display;
     if (sort.key === "base") return thru.totals[o.key];

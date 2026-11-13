@@ -171,7 +171,7 @@ export function formatWeek(result, standings, league) {
   for (const w of standings.open) {
     lines.push(w.amounts ? moneyRow(`Wk ${w.week}${flag(w.provisional)}`, w.amounts) : `Wk ${w.week}: could not be loaded`);
   }
-  lines.push(moneyRow("Total", standings.totals));
+  lines.push(moneyRow(standings.open.some((w) => w.amounts && w.provisional) ? "Total (live)" : "Total", standings.totals));
   lines.push(`${pad("Order", 20)}${owners.map((o) => pad(standings.order[o.key], 10)).join("")}`);
   return lines.join("\n");
 }
