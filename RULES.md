@@ -17,6 +17,11 @@
 - Every other owner pays the winner (winner pts - their pts) x $2
 - Ties for the top split the column's winnings; tied winners pay each other nothing
 
+## End of season
+- Money is settled once, at the end of the season (no weekly payments); the site's "If the season ended
+  today" section shows the fewest payments that settle the locked-in totals.
+- The last-place owner pays for a group dinner at a high-end restaurant after the season.
+
 ## Weekly workflow
 All commands run from this folder. The site is the files in this folder; publishing is `git push`.
 

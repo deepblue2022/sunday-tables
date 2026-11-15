@@ -1,6 +1,7 @@
 // Browser glue: load the data files, build the model (js/view.js), render it, and keep it fresh.
 import { newState, refresh, statusLine, bannerLines, checkIndex, keptRecorded } from "./view.js";
 import { renderTeamTable, renderLightning, renderSettlement, renderStandings, renderCard, nextSort, esc } from "./render.js";
+import { renderSettleUp, renderSeasonChart, settleUpText, chartScale, CHART } from "./season.js";
 
 const TIMEOUT_MS = 15000;
 const RETRY_MS = 60000;
@@ -109,6 +110,11 @@ function render(dataProblem) {
     "standings",
     model.standings ? renderStandings(model.standings, league, sorts.standings, thruWeek) : `<p class="pot">Standings cannot be shown: ${esc(model.standingsProblem)}</p>`,
   );
+  // The season: locked-in weeks only (money is settled once, at the end of the season).
+  const st = model.standings;
+  setHtml("season-chart", st ? renderSeasonChart(st.history ?? [], league) : "");
+  setHtml("settle", st ? renderSettleUp(st.base, league, st.recordedThrough) : "");
+  applyFocus();
   document.body.classList.remove("empty");
   document.body.classList.toggle("noweek", !result);
   document.body.classList.toggle("nosettlement", !week?.result);
@@ -237,4 +243,93 @@ document.addEventListener("visibilitychange", () => {
   else if (Date.now() - lastLoadAt > RETRY_MS) load();
   else schedule();
 });
+
+// ---------- Season chart and settle-up ----------
+
+let focusOwner = null; // owner highlighted in the season chart, from the legend
+
+function applyFocus() {
+  const svg = $("season-chart").querySelector("svg.season");
+  if (!svg) return;
+  svg.classList.toggle("focused", Boolean(focusOwner));
+  svg.querySelectorAll(".sline").forEach((l) => l.classList.toggle("on", l.dataset.owner === focusOwner));
+  $("season-chart").querySelectorAll(".key").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.owner === focusOwner)));
+}
+
+$("season-chart").addEventListener("click", (e) => {
+  const key = e.target.closest?.("button.key")?.dataset.owner;
+  if (!key) return;
+  focusOwner = focusOwner === key ? null : key;
+  applyFocus();
+});
+
+// Hover or tap anywhere on the chart: a hairline snaps to the nearest week and the readout
+// lists every owner's total there, highest first.
+function showTip(e) {
+  const st = model?.standings;
+  const svg = $("season-chart").querySelector("svg.season");
+  if (!st || !svg) return;
+  const history = st.history;
+  const { x } = chartScale(history);
+  const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
+  let i = 0;
+  history.forEach((_, k) => {
+    if (Math.abs(x(k) - pt.x) < Math.abs(x(i) - pt.x)) i = k;
+  });
+  const cross = svg.querySelector(".cross");
+  cross.setAttribute("x1", x(i));
+  cross.setAttribute("x2", x(i));
+  cross.setAttribute("visibility", "visible");
+  const tip = $("season-chart").querySelector(".tip");
+  tip.replaceChildren();
+  const title = document.createElement("div");
+  title.className = "tip-title";
+  title.textContent = i === 0 ? "Start of season" : `After Week ${history[i].week}`;
+  tip.append(title);
+  const owners = state.league.owners.map((o, k) => ({ o, k, cents: history[i].totals[o.key] })).sort((a, b) => b.cents - a.cents);
+  for (const { o, k, cents } of owners) {
+    const row = document.createElement("div");
+    row.className = "tip-row";
+    const key = document.createElement("span");
+    key.className = "tip-key";
+    key.style.background = `var(--s${k + 1})`;
+    const val = document.createElement("strong");
+    val.textContent = `${cents > 0 ? "+" : cents < 0 ? "−" : ""}$${Math.abs(cents) / 100}`;
+    const who = document.createElement("span");
+    who.textContent = o.display;
+    row.append(key, val, who);
+    tip.append(row);
+  }
+  tip.hidden = false;
+  // keep the readout inside the chart: right of the hairline, or left of it near the right edge
+  const box = svg.getBoundingClientRect();
+  const px = (x(i) / CHART.w) * box.width;
+  tip.style.left = px > box.width * 0.6 ? `${Math.max(0, px - tip.offsetWidth - 10)}px` : `${px + 10}px`;
+}
+function hideTip() {
+  const svg = $("season-chart").querySelector("svg.season");
+  svg?.querySelector(".cross")?.setAttribute("visibility", "hidden");
+  const tip = $("season-chart").querySelector(".tip");
+  if (tip) tip.hidden = true;
+}
+for (const type of ["pointermove", "pointerdown"]) {
+  $("season-chart").addEventListener(type, (e) => {
+    if (e.target.closest?.("svg.season")) showTip(e);
+  });
+}
+$("season-chart").addEventListener("pointerleave", hideTip);
+
+$("settle").addEventListener("click", async (e) => {
+  if (!e.target.closest?.("#copy-settle") || !model?.standings) return;
+  const st = model.standings;
+  const done = $("copy-done");
+  try {
+    await navigator.clipboard.writeText(settleUpText(st.base, state.league, st.recordedThrough));
+    done.textContent = "Copied";
+  } catch {
+    done.textContent = "Could not copy on this device";
+  }
+  setTimeout(() => (done.textContent = ""), 2500);
+});
+
 load();

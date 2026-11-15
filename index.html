@@ -11,12 +11,14 @@
   color-scheme: light dark;
   --bg: #f6f7f9; --card: #ffffff; --ink: #16181d; --muted: #566074; --line: #dfe3ea;
   --win: #e7f6ec; --win-ink: #0b6b34; --pos: #0b7a3b; --neg: #b42318; --live: #c2410c;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6;
   --head: #eef1f6; --warn-bg: #fff4e5; --warn-ink: #8a4b00; --err-bg: #fde8e7; --err-ink: #8f1d15;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0f1216; --card: #171b21; --ink: #e8ebf0; --muted: #98a2b3; --line: #2a303a;
     --win: #143222; --win-ink: #7ee2a8; --pos: #5fd693; --neg: #ff8b80; --live: #ffa15c;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0ca30c; --s7: #9085e9;
     --head: #1d222a; --warn-bg: #3a2a10; --warn-ink: #ffd08a; --err-bg: #3d1614; --err-ink: #ffb4ac;
   }
 }
@@ -118,6 +120,44 @@ td.order { color: var(--muted); }
 }
 p .note { display: inline; margin-right: 6px; }
 .pot { margin: 8px 2px 0; font-weight: 600; }
+/* Season chart: validated categorical colours --s1..--s7, one per owner in league order */
+.legend { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 0 0 6px; }
+button.key {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px; min-height: 30px; padding: 2px 10px;
+  border-radius: 999px; color: var(--ink);
+}
+button.key[aria-pressed="true"] { border-color: var(--ink); font-weight: 600; }
+.swatch { width: 14px; height: 3px; border-radius: 2px; }
+.chart-wrap { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 4px 0; }
+svg.season { display: block; width: 100%; height: auto; touch-action: pan-y; }
+svg.season .gridline { stroke: var(--line); stroke-width: 1; }
+svg.season .zero { stroke: var(--muted); stroke-width: 1; }
+svg.season text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+svg.season .ytick { text-anchor: end; }
+svg.season .xtick { text-anchor: middle; }
+svg.season .sline { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+svg.season.focused .sline { opacity: 0.18; }
+svg.season.focused .sline.on { opacity: 1; stroke-width: 3; }
+svg.season .cross { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.tip {
+  position: absolute; top: 8px; z-index: 2; min-width: 120px; padding: 6px 8px; border-radius: 8px; pointer-events: none;
+  background: var(--card); border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); font-size: 12px;
+}
+.tip[hidden] { display: none; }
+.tip-title { color: var(--muted); margin-bottom: 2px; }
+.tip-row { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.tip-row strong { min-width: 50px; text-align: right; }
+.tip-key { width: 12px; height: 3px; border-radius: 2px; flex: none; }
+details.as-table { margin-top: 6px; font-size: 13px; }
+details.as-table summary { cursor: pointer; color: var(--muted); }
+/* Settle-up */
+.season-note { color: var(--muted); font-size: 13px; margin: 0 2px 6px; }
+table.settle { width: auto; min-width: min(100%, 340px); }
+table.settle td.pays { color: var(--muted); text-align: center; width: 3em; }
+table.settle td.to { text-align: left; font-weight: 600; }
+table.settle td.money { font-weight: 700; }
+button.copy { font-size: 14px; margin-top: 8px; }
+.copy-done { margin-left: 8px; color: var(--pos); font-size: 13px; }
 footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 body.empty section, body.empty #week, body.noweek section.week, body.nosettlement #settlement-section { display: none; }
 </style>
@@ -148,6 +188,14 @@ body.empty section, body.empty #week, body.noweek section.week, body.nosettlemen
   <section>
     <h2>Accumulated standings</h2>
     <div id="standings"></div>
+  </section>
+  <section id="season-section">
+    <h2>Season so far</h2>
+    <div id="season-chart"></div>
+  </section>
+  <section id="settle-section">
+    <h2>If the season ended today</h2>
+    <div id="settle"></div>
   </section>
   <footer>Stats from ESPN. Live scores refresh on their own while games are on. Tap a player for their stats.</footer>
   <dialog id="card" aria-label="Player stats"><div id="card-body"></div></dialog>
