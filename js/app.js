@@ -1,6 +1,7 @@
 // Browser glue: load the data files, build the model (js/view.js), render it, and keep it fresh.
 import { newState, refresh, statusLine, bannerLines, checkIndex, keptRecorded } from "./view.js";
 import { renderTeamTable, renderLightning, renderSettlement, renderStandings, renderCard, nextSort, esc } from "./render.js";
+import { banterPool } from "./banter.js";
 
 const TIMEOUT_MS = 15000;
 const RETRY_MS = 60000;
@@ -38,7 +39,9 @@ async function loadData() {
   checkIndex(index);
   if (!Array.isArray(league.owners)) throw new Error("data/league.json does not list the owners");
   const weekFiles = await Promise.all(index.map((w) => keptRecorded(w, state) ?? getData(weekPath(w))));
-  return { league, baseline, weekFiles };
+  // The commentary is optional: a missing or broken file just means no banner.
+  const banter = await getData("data/banter.json").catch(() => null);
+  return { league, baseline, weekFiles, banter };
 }
 
 async function espnFetch(url) {
@@ -60,6 +63,7 @@ let shownProblem = null;
 let thruWeek = null; // week the standings' "Thru Wk" column runs through; null = the latest recorded
 let shown = null; // {result, weekFile} for the week on screen, so a tapped player box can be found
 let cardKey = null; // the player box whose stats card is open
+let quipTurn = Math.floor(Math.random() * 1000); // which banter line to show; moves on each refresh or tap
 
 // Replace an element's HTML only when it changed, keeping each table's sideways scroll position.
 function setHtml(id, html) {
@@ -113,7 +117,52 @@ function render(dataProblem) {
   document.body.classList.toggle("noweek", !result);
   document.body.classList.toggle("nosettlement", !week?.result);
   if (cardKey) showCard(cardKey); // keep an open card up to date with live scores
+  showQuip(week, result, weekFile);
 }
+
+// ---------- Commentary banner ----------
+
+const storage = {
+  get(k) {
+    try {
+      return localStorage.getItem(k);
+    } catch {
+      return null;
+    }
+  },
+  set(k, v) {
+    try {
+      localStorage.setItem(k, v);
+    } catch {
+      // private mode or storage blocked: the banner just shows again next time
+    }
+  },
+};
+const hiddenKey = "banterHidden";
+
+function showQuip(week, result, weekFile) {
+  const el = $("quip");
+  const batch = String(state.banter?.batch ?? "");
+  const pool = banterPool({ week, result, standings: model.standings, league: state.league, weekFile, banter: state.banter });
+  if (!pool.length || storage.get(hiddenKey) === batch) {
+    el.hidden = true;
+    return;
+  }
+  el.hidden = false;
+  const line = pool[quipTurn % pool.length];
+  $("quip-dot").hidden = !line.live;
+  $("quip-text").textContent = line.text;
+}
+
+$("quip-text").addEventListener("click", () => {
+  quipTurn++;
+  if (model) render(shownProblem);
+});
+// Hidden until the next weekly batch is published.
+$("quip-close").addEventListener("click", () => {
+  storage.set(hiddenKey, String(state?.banter?.batch ?? ""));
+  $("quip").hidden = true;
+});
 
 // ---------- Stats card ----------
 
@@ -186,7 +235,10 @@ async function load() {
     // showing the earlier data.
     let dataProblem = null;
     try {
-      state = newState(await loadData(), state);
+      const data = await loadData();
+      state = newState(data, state);
+      state.banter = data.banter;
+      quipTurn++; // a different line on every refresh
     } catch (err) {
       if (!state) throw err;
       dataProblem = err.message;
