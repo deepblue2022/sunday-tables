@@ -254,10 +254,12 @@ export function derivePlayers(weekFile, scoreboard, gamesById) {
       const summary = gamesById[game.id];
       if (summary) {
         const line = summary.stats[p.id];
-        const twoPt = summary.twoPt.filter((t) => t.name === p.name && t.team === p.team);
-        // 2-pt conversions ESPN's play text did not credit, added by the scorekeeper (see RULES.md)
-        const fixed = (weekFile.two_pt_fixes ?? []).filter((f) => f.id === p.id && f.points);
-        twoPt.push(...fixed);
+        // A two_pt_fixes entry settles its play (see RULES.md): whatever the play text credited
+        // for that play is replaced by the fix, which may credit one of ours or nobody.
+        const fixes = weekFile.two_pt_fixes ?? [];
+        const settled = new Set(fixes.map((f) => f.play));
+        const twoPt = summary.twoPt.filter((t) => t.name === p.name && t.team === p.team && !(t.play && settled.has(t.play)));
+        twoPt.push(...fixes.filter((f) => f.id === p.id && f.points));
         const twoPtPoints = twoPt.reduce((a, t) => a + t.points, 0);
         points = playerPoints(line, twoPtPoints);
         if (line || twoPt.length) stats = { ...line, ...(twoPtPoints ? { twoPt: twoPtPoints } : {}) };

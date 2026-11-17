@@ -143,3 +143,37 @@ test("tickerPollMs: a minute during a game, else until the next kickoff (1 to 30
   assert.equal(tickerPollMs({ games: [g("done")] }, now), null);
   assert.equal(tickerPollMs(null, now), null);
 });
+
+test("the ticker falls back to the latest week on the site when ESPN's current week can't be reached", async () => {
+  const { newState, refresh } = await import("../js/view.js");
+  const { API } = await import("../js/espn.js");
+  const { weekFile } = build();
+  const baseline = { through_week: 0, totals: Object.fromEntries(league.owners.map((o) => [o.key, 0])) };
+  const live = { events: [{ id: "1", date: "2026-11-15T18:00Z", status: { type: { state: "in", shortDetail: "8:42 - 3rd" } }, competitions: [{ competitors: [{ homeAway: "home", score: "14", team: { abbreviation: "AAA" } }, { homeAway: "away", score: "17", team: { abbreviation: "BBB" } }] }] }] };
+  const model = await refresh(newState({ league, baseline, weekFiles: [weekFile] }), async (url) => {
+    if (url === `${API}/scoreboard`) throw new Error("down");
+    return url.includes("/scoreboard") ? live : { boxscore: { players: [] } };
+  });
+  assert.deepEqual(scoreItems(model.tickerScoreboard), [{ text: "BBB 17 – AAA 14 · 8:42 - 3rd", live: true }]);
+});
+
+test("the ticker's request goes out first, alongside the weeks, instead of after them", async () => {
+  const { newState, refresh } = await import("../js/view.js");
+  const { API } = await import("../js/espn.js");
+  const { weekFile } = build();
+  const baseline = { through_week: 0, totals: Object.fromEntries(league.owners.map((o) => [o.key, 0])) };
+  const order = [];
+  await refresh(newState({ league, baseline, weekFiles: [weekFile] }), async (url) => {
+    order.push(url === `${API}/scoreboard` ? "ticker" : "week");
+    return { events: [] };
+  });
+  assert.equal(order[0], "ticker");
+});
+
+test("scoreItems: upcoming games on a later day are left out when asked (a Thursday shows its own game)", () => {
+  const today = (iso) => iso.startsWith("2026-11-13"); // Thursday: KC @ DEN on Sunday is left out
+  const items = scoreItems(sb, () => "later", today);
+  assert.deepEqual(items.map((i) => i.text), ["DAL 17 – PHI 14 · 8:42 - 3rd", "WSH 24 – NYG 21 · Final", "BUF @ MIA · postponed"]);
+  // a game still to play today stays in
+  assert.ok(scoreItems(sb, () => "4:25 PM", (iso) => iso.startsWith("2026-11-15T21")).some((i) => i.text === "KC @ DEN · 4:25 PM"));
+});

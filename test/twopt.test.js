@@ -100,3 +100,21 @@ test("two_pt_fixes entries are validated", () => {
   bad([{ play: "5", id: "mt", points: 3, reason: "r" }], /points must be 1 \(passer\) or 2/);
   bad([{ play: "5", id: null, points: 2, reason: "r" }], /gives points but names no player/);
 });
+
+test("a two_pt_fixes entry replaces what the play text credited for that play", () => {
+  // the play text credits our Mitchell Trubisky (1) on play 7, but the score shows no 2-pt
+  const credited = summary([{ name: "Mitchell Trubisky", team: "BUF", points: 1, play: "7" }]);
+  const plain = week("done");
+  assert.equal(derivePlayers(plain.weekFile, plain.scoreboard, credited).mt.points, 10 + 1);
+  // "nobody of ours": the +1 goes away
+  const none = week("done", [{ play: "7", id: null, points: 0, reason: "score rose by 6 only" }]);
+  const p = derivePlayers(none.weekFile, none.scoreboard, credited).mt;
+  assert.equal(p.points, 10);
+  assert.equal(p.stats.twoPt, undefined);
+  // naming the same player for that play counts once, at the fix's value
+  const same = week("done", [{ play: "7", id: "mt", points: 1, reason: "confirmed" }]);
+  assert.equal(derivePlayers(same.weekFile, same.scoreboard, credited).mt.points, 10 + 1);
+  // a fix for another play leaves this play's credit alone
+  const other = week("done", [{ play: "9", id: null, points: 0, reason: "r" }]);
+  assert.equal(derivePlayers(other.weekFile, other.scoreboard, credited).mt.points, 10 + 1);
+});

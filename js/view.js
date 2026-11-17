@@ -39,6 +39,12 @@ export async function refresh(state, fetchFn, now = new Date()) {
   const { league, baseline } = state;
   const weeks = [];
   const polls = [];
+  // The live score ticker's request (below) starts now, alongside the weeks, so it never holds
+  // up the tables.
+  const ticker = fetchCurrentScoreboard(fetchFn).then(
+    (scoreboard) => ({ scoreboard }),
+    () => ({ failed: true }),
+  );
   for (const weekFile of state.weekFiles) {
     const key = keyOf(weekFile);
     const w = {
@@ -114,11 +120,12 @@ export async function refresh(state, fetchFn, now = new Date()) {
   // that week's tables are on the site. If it can't be reached, the ticker falls back to the
   // latest week on the site; nothing else depends on it.
   let tickerScoreboard = null;
-  try {
-    tickerScoreboard = await fetchCurrentScoreboard(fetchFn);
-    polls.push(tickerPollMs(tickerScoreboard, now));
-  } catch {
+  const current = await ticker;
+  if (current.failed) {
     tickerScoreboard = weeks.filter((w) => !w.recorded && w.scoreboard).at(-1)?.scoreboard ?? null;
+  } else {
+    tickerScoreboard = current.scoreboard;
+    polls.push(tickerPollMs(tickerScoreboard, now));
   }
 
   const due = polls.filter((p) => p !== null);

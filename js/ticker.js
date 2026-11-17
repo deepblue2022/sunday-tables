@@ -11,10 +11,13 @@ const dollars = (cents) => fmtMoney(Math.abs(cents)).replace("+", "");
 export const hasLiveGame = (scoreboard) => Boolean(scoreboard?.games?.some((g) => g.phase === "in"));
 
 // One item per game: {text, live}. `fmtKickoff` formats an ISO time ("Sun 1:00 PM").
-export function scoreItems(scoreboard, fmtKickoff = (iso) => iso) {
+// `isToday(iso)`, if given, leaves out games still to play on a later day, so on a Thursday the
+// one live game isn't lost among Sunday's whole slate.
+export function scoreItems(scoreboard, fmtKickoff = (iso) => iso, isToday = null) {
   if (!scoreboard?.games?.length) return [];
   const rank = { in: 0, done: 1, pre: 2, unresolved: 3 };
   return [...scoreboard.games]
+    .filter((g) => g.phase !== "pre" || !isToday || isToday(g.kickoff))
     .sort((a, b) => rank[a.phase] - rank[b.phase] || String(a.kickoff).localeCompare(String(b.kickoff)))
     .map((g) => {
       const home = g.home ?? g.teams[1];

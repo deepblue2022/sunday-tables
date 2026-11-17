@@ -131,15 +131,24 @@ function buildTicker() {
   // ESPN's current NFL week (see js/view.js); the ticker is only up while a game is being played
   const scoreboard = model.tickerScoreboard;
   if (!hasLiveGame(scoreboard)) return [];
-  const games = scoreItems(scoreboard, kickoff);
-  return tickerItems({ games, comments: seasonFacts(model.weeks, state.league), every: 3, turn: tickerPass * 3 });
+  const games = scoreItems(scoreboard, kickoff, isToday);
+  const every = 3;
+  // each pass through the games shows the next facts along
+  return tickerItems({ games, comments: seasonFacts(model.weeks, state.league), every, turn: tickerPass * Math.floor(games.length / every) });
 }
+const isToday = (iso) => new Date(iso).toDateString() === new Date().toDateString();
 
+// The rule that keeps the ticker moving: whenever the bar is up, a tick is pending. The pending
+// tick is cleared when the bar hides, and set again whenever it shows (also after a gap between
+// games, e.g. from the late afternoon games into the night game).
 function showQuip() {
   const el = $("quip");
   tickerList = buildTicker();
   if (!tickerList.length) {
     el.hidden = true;
+    stopTick();
+    quipTurn = 0; // when it comes back (the next game), start with the live games
+    shownTurn = null;
     return;
   }
   el.hidden = false;
@@ -150,26 +159,36 @@ function showQuip() {
     $("quip-dot").hidden = !item.live;
     $("quip-text").classList.toggle("fact", Boolean(item.comment));
     const run = $("quip-run");
-    if (run.textContent === item.text) return; // same words (a refresh): leave any scroll running
-    run.getAnimations().forEach((a) => a.cancel());
-    run.textContent = item.text;
-    scrollRun();
-    scheduleTick();
+    if (run.textContent !== item.text) {
+      run.getAnimations().forEach((a) => a.cancel());
+      run.textContent = item.text;
+      scrollRun();
+      scheduleTick(); // a new item gets its own full time on screen
+    } else if (tickTimer === null) {
+      scheduleTick(); // same words, but nothing pending (the bar just came back): start again
+    }
   };
+  if (flipping && !moved) return; // a refresh in the middle of a flip: the flip shows the item
   // Moving to the next item flips it in: the old one slides up and out, the new one up into
   // place. A refresh that only updates the score of the item on show just changes the text.
   if (!moved || reduceMotion.matches || !$("quip-text").animate) return put();
   const box = $("quip-body");
-  box.getAnimations().forEach((a) => a.finish());
+  const flip = ++flipCount;
+  flipping = true;
+  box.getAnimations().forEach((a) => a.cancel());
+  const done = () => {
+    if (flip !== flipCount) return; // a newer flip (a quick second tap) took over
+    flipping = false;
+    put();
+    box.animate([{ transform: "translateY(70%)", opacity: 0 }, { transform: "translateY(0)", opacity: 1 }], { duration: 220, easing: "ease-out" });
+  };
   box
     .animate([{ transform: "translateY(0)", opacity: 1 }, { transform: "translateY(-70%)", opacity: 0 }], { duration: 160, easing: "ease-in" })
-    .finished.then(() => {
-      put();
-      box.animate([{ transform: "translateY(70%)", opacity: 0 }, { transform: "translateY(0)", opacity: 1 }], { duration: 220, easing: "ease-out" });
-    })
-    .catch(put);
+    .finished.then(done, done);
 }
 let shownTurn = null; // the ticker item on screen, so a flip only plays when it changes
+let flipping = false;
+let flipCount = 0;
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 // The bar is one line. An item too long for it (a fun fact) waits a moment so its start
@@ -198,17 +217,30 @@ let tickerPass = 0; // full passes through the games so far; moves the comments 
 function nextQuip() {
   if (!model || $("quip").hidden) return;
   quipTurn++;
-  if (tickerList.length && quipTurn % tickerList.length === 0) tickerPass++;
+  if (quipTurn >= tickerList.length) {
+    // the end of a pass (also when the list got shorter): start over, with the next facts
+    quipTurn = 0;
+    tickerPass++;
+  }
   showQuip();
 }
-// Each new item sets its own time on screen; a hidden tab just waits.
+// Each new item sets its own time on screen; a hidden tab just waits. `tickTimer` is null
+// exactly when no tick is pending.
 let tickTimer = null;
 function scheduleTick() {
   clearTimeout(tickTimer);
-  tickTimer = setTimeout(() => (document.hidden ? scheduleTick() : nextQuip()), dwell);
+  tickTimer = setTimeout(() => {
+    tickTimer = null;
+    if (document.hidden) scheduleTick();
+    else nextQuip();
+  }, dwell);
+}
+function stopTick() {
+  clearTimeout(tickTimer);
+  tickTimer = null;
 }
 $("quip-text").addEventListener("click", () => {
-  clearTimeout(tickTimer); // a tap moves on now; the next item gets its full time
+  stopTick(); // a tap moves on now; the next item gets its full time
   nextQuip();
 });
 
