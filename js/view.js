@@ -2,7 +2,7 @@
 // keeps the last good live result when ESPN is unreachable, and says when to refresh next.
 // No DOM here; js/app.js renders the model.
 import { scoreWeek, standings, defaultWeek, derivePlayers, relevantGames, validateWeekFile } from "./scoring.js";
-import { loadLive, nextPollMs } from "./espn.js";
+import { loadLive, nextPollMs, fetchCurrentScoreboard, tickerPollMs } from "./espn.js";
 
 const RETRY_MS = 60000;
 const keyOf = (w) => `${w.season}-${w.week}`;
@@ -70,15 +70,21 @@ export async function refresh(state, fetchFn, now = new Date()) {
       if (live) {
         polls.push(RETRY_MS); // replaced below once the week has been scored
         const players = derivePlayers(weekFile, live.scoreboard, live.gamesById);
-        state.last.set(key, { result: scoreWeek(weekFile, players, league), errors: live.errors, at: now });
+        state.last.set(key, { result: scoreWeek(weekFile, players, league), errors: live.errors, at: now, scoreboard: live.scoreboard });
         state.dataFrom = now;
-        polls[polls.length - 1] = live.errors.length ? RETRY_MS : nextPollMs(relevantGames(weekFile, live.scoreboard));
+        // our players' games set the pace; any NFL game being played also refreshes every
+        // minute, so the score ticker stays current (the scoreboard is a single request)
+        const ours = nextPollMs(relevantGames(weekFile, live.scoreboard));
+        const anyLive = live.scoreboard.games.some((g) => g.phase === "in") ? 60000 : null;
+        const due = [ours, anyLive].filter((p) => p !== null);
+        polls[polls.length - 1] = live.errors.length ? RETRY_MS : due.length ? Math.min(...due) : null;
       }
       const kept = state.last.get(key);
       if (kept) {
         w.result = kept.result;
         w.errors = kept.errors;
         w.dataFrom = kept.at;
+        w.scoreboard = kept.scoreboard ?? null; // every NFL game this week, for the banner ticker
       } else {
         // Nothing loaded yet: the rosters can still be shown, every player unknown, no money.
         w.placeholder = scoreWeek(weekFile, {}, league);
@@ -104,12 +110,24 @@ export async function refresh(state, fetchFn, now = new Date()) {
     standingsProblem = err.message;
   }
 
+  // The live score ticker follows ESPN's current NFL week, so a Thursday game shows even before
+  // that week's tables are on the site. If it can't be reached, the ticker falls back to the
+  // latest week on the site; nothing else depends on it.
+  let tickerScoreboard = null;
+  try {
+    tickerScoreboard = await fetchCurrentScoreboard(fetchFn);
+    polls.push(tickerPollMs(tickerScoreboard, now));
+  } catch {
+    tickerScoreboard = weeks.filter((w) => !w.recorded && w.scoreboard).at(-1)?.scoreboard ?? null;
+  }
+
   const due = polls.filter((p) => p !== null);
   return {
     weeks,
     standings: table,
     standingsProblem,
     pollMs: due.length ? Math.min(...due) : null,
+    tickerScoreboard,
     unavailable: weeks.some((w) => w.unavailable),
     dataFrom: state.dataFrom,
     gameErrors: weeks.some((w) => w.errors.length > 0),

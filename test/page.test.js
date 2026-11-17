@@ -129,6 +129,9 @@ const liveWeek9 = () => week9WeekFile(); // Week 9 without `recorded`
 const espn = (opts = {}) => {
   const calls = [];
   const fetchFn = async (url) => {
+    // the live score ticker's "current NFL week" request: answered with no games and kept out
+    // of `calls`, so these tests see only what the weeks themselves ask for
+    if (url === `${API}/scoreboard`) return opts.current ?? { events: [] };
     calls.push(url.replace(API, ""));
     if (opts.down) throw new Error("network down");
     if (url.includes("scoreboard")) return opts.scoreboard ?? fixture("2026-09/scoreboard.json");

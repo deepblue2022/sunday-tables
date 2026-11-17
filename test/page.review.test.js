@@ -19,6 +19,9 @@ const PRE = { state: "pre", completed: false };
 const espn = (opts = {}) => {
   const calls = [];
   const fetchFn = async (url) => {
+    // the live score ticker's "current NFL week" request: answered with no games and kept out
+    // of `calls`, so these tests see only what the weeks themselves ask for
+    if (url === `${API}/scoreboard`) return opts.current ?? { events: [] };
     calls.push(url.replace(API, ""));
     const week = Number(url.match(/week=(\d+)/)?.[1]);
     if (opts.down === true || opts.down === week) throw new Error("network down");

@@ -120,6 +120,22 @@ export async function fetchScoreboard(season, week, fetchFn) {
   return parseScoreboard(await fetchFn(`${API}/scoreboard?seasontype=2&week=${week}&dates=${season}`));
 }
 
+// The current NFL week's games as ESPN sees it, whether or not the week is on the site yet
+// (for the live score ticker).
+export async function fetchCurrentScoreboard(fetchFn) {
+  return parseScoreboard(await fetchFn(`${API}/scoreboard`));
+}
+
+// How long until the ticker needs another look: a minute while any game is on; otherwise until
+// the next kickoff (at least a minute, at most half an hour); null when the week is over.
+export function tickerPollMs(scoreboard, now = new Date()) {
+  const games = scoreboard?.games ?? [];
+  if (games.some((g) => g.phase === "in")) return 60000;
+  const next = games.filter((g) => g.phase === "pre").map((g) => Date.parse(g.kickoff) - now.getTime()).filter(Number.isFinite);
+  if (!next.length) return null;
+  return Math.min(Math.max(Math.min(...next), 60000), 30 * 60000);
+}
+
 export async function fetchGame(id, fetchFn) {
   return parseGame(await fetchFn(`${API}/summary?event=${id}`));
 }

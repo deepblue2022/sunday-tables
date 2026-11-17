@@ -11,13 +11,13 @@
   color-scheme: light dark;
   --bg: #f6f7f9; --card: #ffffff; --ink: #16181d; --muted: #566074; --line: #dfe3ea;
   --win: #e7f6ec; --win-ink: #0b6b34; --pos: #0b7a3b; --neg: #b42318; --live: #c2410c;
-  --head: #eef1f6; --warn-bg: #fff4e5; --warn-ink: #8a4b00; --err-bg: #fde8e7; --err-ink: #8f1d15;
+  --quip: #6d4bd8; --head: #eef1f6; --warn-bg: #fff4e5; --warn-ink: #8a4b00; --err-bg: #fde8e7; --err-ink: #8f1d15;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0f1216; --card: #171b21; --ink: #e8ebf0; --muted: #98a2b3; --line: #2a303a;
     --win: #143222; --win-ink: #7ee2a8; --pos: #5fd693; --neg: #ff8b80; --live: #ffa15c;
-    --head: #1d222a; --warn-bg: #3a2a10; --warn-ink: #ffd08a; --err-bg: #3d1614; --err-ink: #ffb4ac;
+    --quip: #b39bff; --head: #1d222a; --warn-bg: #3a2a10; --warn-ink: #ffd08a; --err-bg: #3d1614; --err-ink: #ffb4ac;
   }
 }
 * { box-sizing: border-box; }
@@ -40,6 +40,31 @@ button { cursor: pointer; }
 button:disabled { opacity: 0.5; cursor: default; }
 #updated { color: var(--muted); font-size: 13px; }
 #status { color: var(--muted); margin: 0 0 4px; }
+/* The live ticker: a one-line bar pinned to the top of the screen while a game is on. */
+#quip {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; gap: 8px; margin: 6px 0 8px; padding: 6px 12px 6px 12px;
+  background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--quip); border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden; /* the flip and the scroll stay inside the bar */
+}
+#quip[hidden] { display: none; }
+.quip-body { flex: 1 1 auto; display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+/* an orange dot marks a game being played */
+.quip-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); }
+.quip-dot[hidden] { display: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+button#quip-text {
+  all: unset; flex: 1 1 auto; min-width: 0; overflow: hidden; cursor: pointer; font-size: 14px; line-height: 1.6; color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+  font-weight: 600; font-variant-numeric: tabular-nums;
+}
+#quip-run { display: inline-block; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  #quip-run { white-space: normal; } /* no scrolling: long items wrap instead */
+}
+button#quip-text.fact { font-weight: 400; }
+button#quip-text:focus-visible { outline: 2px solid var(--quip); outline-offset: 2px; border-radius: 4px; }
 #banner { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
 #banner.error { background: var(--err-bg); color: var(--err-ink); }
 #banner p { margin: 2px 0; }
@@ -130,6 +155,12 @@ body.empty section, body.empty #week, body.noweek section.week, body.nosettlemen
     <button id="refresh" type="button">Refresh</button>
     <span id="updated"></span>
   </header>
+  <div id="quip" hidden>
+    <span class="quip-body" id="quip-body">
+      <span class="quip-dot" id="quip-dot" hidden><span class="sr">Live: </span></span>
+      <button type="button" id="quip-text" title="Tap for the next one"><span id="quip-run"></span></button>
+    </span>
+  </div>
   <div id="banner" role="status" hidden></div>
   <p id="status">Loading&hellip;</p>
 

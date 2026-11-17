@@ -231,3 +231,20 @@ test("loadLive survives a game fetch that rejects with a non-Error", async () =>
   const r = await loadLive(weekFile, fetchFn);
   assert.equal(r.errors.length, 1);
 });
+
+test("refresh: any NFL game being played refreshes every minute, even with none of our players in it", async () => {
+  const { newState, refresh } = await import("../js/view.js");
+  const { league } = await import("./helpers.js");
+  const { weekFile } = build();
+  // our players (team AAA) have finished; an unrelated game (CCC v DDD) is on
+  const scoreboard = {
+    events: [
+      { id: "1", date: "2026-11-15T18:00Z", status: { type: { state: "post", completed: true } }, competitions: [{ competitors: [{ team: { abbreviation: "AAA" } }, { team: { abbreviation: "BBB" } }] }] },
+      { id: "2", date: "2026-11-15T21:00Z", status: { type: { state: "in", completed: false } }, competitions: [{ competitors: [{ team: { abbreviation: "CCC" } }, { team: { abbreviation: "DDD" } }] }] },
+    ],
+  };
+  const fetchFn = async (url) => (url.includes("/scoreboard") ? scoreboard : { boxscore: { players: [{ team: { abbreviation: "AAA" }, statistics: [{ name: "rushing", keys: ["rushingYards"], athletes: [{ athlete: { id: "x" }, stats: ["10"] }] }] }] } });
+  const model = await refresh(newState({ league, baseline: { through_week: 0, totals: Object.fromEntries(league.owners.map((o) => [o.key, 0])) }, weekFiles: [weekFile] }), fetchFn);
+  assert.equal(model.pollMs, 60000);
+  assert.ok(model.weeks[0].scoreboard.games.some((g) => g.phase === "in"));
+});
