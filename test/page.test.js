@@ -151,7 +151,7 @@ test("refresh: a recorded week needs no ESPN calls", async () => {
   assert.equal(model.weeks[0].recorded, true);
   assert.equal(model.weeks[0].result.settlement.Mxue.total, 44800);
   assert.equal(model.standings.totals.JD, 50000);
-  assert.equal(model.pollMs, null);
+  assert.equal(model.pollMs, 30 * 60000); // nothing on: only the slow check for the next week
   assert.equal(model.unavailable, false);
   assert.equal(model.defaultWeek, 9);
 });
@@ -166,7 +166,7 @@ test("refresh: an unrecorded finished week is scored live and matches the record
   assert.equal(model.weeks[0].result.final, true);
   assert.deepEqual(model.standings.open.map((w) => [w.week, w.provisional]), [[9, false]]);
   assert.equal(model.standings.totals.JD, 50000);
-  assert.equal(model.pollMs, null);
+  assert.equal(model.pollMs, 30 * 60000); // nothing on: only the slow check for the next week
   assert.equal(calls.filter((c) => c.includes("scoreboard")).length, 1);
   // a second refresh reuses every finished game
   const before = calls.length;

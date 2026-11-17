@@ -5,6 +5,7 @@ import { scoreWeek, standings, defaultWeek, derivePlayers, relevantGames, valida
 import { loadLive, nextPollMs, fetchCurrentScoreboard, tickerPollMs } from "./espn.js";
 
 const RETRY_MS = 60000;
+const IDLE_MS = 30 * 60000; // the slowest the page ever checks again while open
 const keyOf = (w) => `${w.season}-${w.week}`;
 
 // index.json must be a list of {season, week}; anything else is reported by file name.
@@ -125,8 +126,12 @@ export async function refresh(state, fetchFn, now = new Date()) {
     tickerScoreboard = weeks.filter((w) => !w.recorded && w.scoreboard).at(-1)?.scoreboard ?? null;
   } else {
     tickerScoreboard = current.scoreboard;
-    polls.push(tickerPollMs(tickerScoreboard, now));
   }
+  // A failed request tries again in a minute (a game may be on). Otherwise never stop looking
+  // altogether: with nothing on and nothing scheduled (ESPN still showing a finished week),
+  // check again in half an hour, so a tab left open on a computer all week still notices
+  // Thursday's game. Phones reload when the tab comes back.
+  polls.push(current.failed ? RETRY_MS : (tickerPollMs(tickerScoreboard, now) ?? IDLE_MS));
 
   const due = polls.filter((p) => p !== null);
   return {

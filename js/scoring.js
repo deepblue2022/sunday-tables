@@ -254,11 +254,14 @@ export function derivePlayers(weekFile, scoreboard, gamesById) {
       const summary = gamesById[game.id];
       if (summary) {
         const line = summary.stats[p.id];
-        // A two_pt_fixes entry settles its play (see RULES.md): whatever the play text credited
-        // for that play is replaced by the fix, which may credit one of ours or nobody.
+        // A two_pt_fixes entry settles a role on its play (see RULES.md). A fix naming a player
+        // replaces the play text's credit for that role only (1 = passer, 2 = receiver or
+        // runner), so a teammate credited in the other role keeps it. A fix naming nobody
+        // ("id": null) clears every credit on the play.
         const fixes = weekFile.two_pt_fixes ?? [];
-        const settled = new Set(fixes.map((f) => f.play));
-        const twoPt = summary.twoPt.filter((t) => t.name === p.name && t.team === p.team && !(t.play && settled.has(t.play)));
+        const replaced = (t) =>
+          Boolean(t.play) && fixes.some((f) => f.play === t.play && (f.id === null || f.id === undefined || f.points === t.points));
+        const twoPt = summary.twoPt.filter((t) => t.name === p.name && t.team === p.team && !replaced(t));
         twoPt.push(...fixes.filter((f) => f.id === p.id && f.points));
         const twoPtPoints = twoPt.reduce((a, t) => a + t.points, 0);
         points = playerPoints(line, twoPtPoints);

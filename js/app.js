@@ -163,7 +163,9 @@ function showQuip() {
       run.getAnimations().forEach((a) => a.cancel());
       run.textContent = item.text;
       scrollRun();
-      scheduleTick(); // a new item gets its own full time on screen
+      // A new item gets its own full time on screen. The same item with a new score or clock
+      // (a refresh) keeps the time it already had.
+      if (moved || tickTimer === null) scheduleTick();
     } else if (tickTimer === null) {
       scheduleTick(); // same words, but nothing pending (the bar just came back): start again
     }

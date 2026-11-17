@@ -48,3 +48,6 @@ from `baseline.json` totals, set `through_week` one lower, record the week, and 
 
 - The CLI needs network access to `site.api.espn.com`.
 - `npm run score` passes `--use-system-ca`. If Node rejects that flag, run `node cli/score.mjs ...` instead.
+- In Claude cloud sessions: use the "sunday-tables" environment (it allows `site.api.espn.com`), and prefix CLI
+  runs with `NODE_USE_ENV_PROXY=1` so Node's `fetch` goes through the proxy, e.g.
+  `NODE_USE_ENV_PROXY=1 npm run score -- 2026 10`. Without it the CLI fails with `ENOTFOUND`.

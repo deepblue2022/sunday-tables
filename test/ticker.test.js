@@ -129,7 +129,7 @@ test("the ticker follows ESPN's current NFL week, before that week is on the sit
     return {};
   });
   assert.equal(down.tickerScoreboard, null);
-  assert.equal(down.pollMs, null);
+  assert.equal(down.pollMs, 60000); // a failed request tries again in a minute
 });
 
 test("tickerPollMs: a minute during a game, else until the next kickoff (1 to 30 minutes), else stop", async () => {

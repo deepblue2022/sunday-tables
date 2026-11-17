@@ -46,8 +46,9 @@ For finished games, `npm run score -- <season> <week>` prints a `2-PT CHECK` lin
 disagree, or where the play text names someone who is almost, but not exactly, one of our players (e.g.
 "Mitch Trubisky" vs "Mitchell Trubisky"). `--record` refuses until each is settled in the week file:
 `"two_pt_fixes": [{"play": "<play id>", "id": "<athlete id>", "points": 1 or 2, "reason": "..."}]` credits the
-player (1 for the passer, 2 for the receiver or runner); use `"id": null, "points": 0` when nobody of ours
-should get anything. The site uses the fix too.
+player (1 for the passer, 2 for the receiver or runner) in place of whatever the play text credited for that
+role on that play; a credit for the other role on the same play stays. Use `"id": null, "points": 0` to clear
+every credit on the play (nobody of ours should get anything). The site uses the fix too.
 
 **Cancelled or postponed games:** the site leaves that week provisional and the players show "?".
 The scorekeeper decides how to settle it.

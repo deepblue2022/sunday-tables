@@ -118,3 +118,20 @@ test("a two_pt_fixes entry replaces what the play text credited for that play", 
   const other = week("done", [{ play: "9", id: null, points: 0, reason: "r" }]);
   assert.equal(derivePlayers(other.weekFile, other.scoreboard, credited).mt.points, 10 + 1);
 });
+
+test("a fix for one role on a play leaves a teammate's credit for the other role alone", () => {
+  // play 7: "Mitch Trubisky pass to Aaron Jones Sr." - both ours; only the passer's name is off
+  const credited = summary([
+    { name: "Mitch Trubisky", team: "BUF", points: 1, play: "7" },
+    { name: "Aaron Jones Sr.", team: "BUF", points: 2, play: "7" },
+  ]);
+  const fixed = week("done", [{ play: "7", id: "mt", points: 1, reason: "play text says Mitch" }]);
+  const players = derivePlayers(fixed.weekFile, fixed.scoreboard, credited);
+  assert.equal(players.mt.points, 10 + 1); // the passer gets the fixed 1
+  assert.equal(players.aj.points, 2); // the receiver keeps the 2 the play text gave
+  // "nobody of ours" still clears the whole play
+  const none = week("done", [{ play: "7", id: null, points: 0, reason: "no 2-pt on this play" }]);
+  const cleared = derivePlayers(none.weekFile, none.scoreboard, credited);
+  assert.equal(cleared.mt.points, 10);
+  assert.equal(cleared.aj.points, 0);
+});
