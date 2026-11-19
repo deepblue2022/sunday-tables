@@ -1,7 +1,7 @@
 // Browser glue: load the data files, build the model (js/view.js), render it, and keep it fresh.
 import { newState, refresh, statusLine, bannerLines, checkIndex, keptRecorded } from "./view.js";
 import { renderTeamTable, renderLightning, renderSettlement, renderStandings, renderCard, nextSort, esc } from "./render.js";
-import { scoreItems, seasonFacts, tickerItems, hasLiveGame } from "./ticker.js";
+import { scoreItems, seasonFacts, tickerItems, hasLiveGame, itemTime } from "./ticker.js";
 
 const TIMEOUT_MS = 15000;
 const RETRY_MS = 60000;
@@ -124,19 +124,17 @@ function render(dataProblem) {
 // The ticker shows ESPN's current NFL week, whichever week the viewer is looking at below (and
 // even before that week is on the site): every game's score, with a league fun fact after every
 // few games. It is only up while a game is being played.
-const TICK_MS = 4500;
 let tickerList = [];
 
 function buildTicker() {
   // ESPN's current NFL week (see js/view.js); the ticker is only up while a game is being played
   const scoreboard = model.tickerScoreboard;
   if (!hasLiveGame(scoreboard)) return [];
-  const games = scoreItems(scoreboard, kickoff, isToday);
+  const games = scoreItems(scoreboard, kickoff);
   const every = 3;
   // each pass through the games shows the next facts along
   return tickerItems({ games, comments: seasonFacts(model.weeks, state.league), every, turn: tickerPass * Math.floor(games.length / every) });
 }
-const isToday = (iso) => new Date(iso).toDateString() === new Date().toDateString();
 
 // The rule that keeps the ticker moving: whenever the bar is up, a tick is pending. The pending
 // tick is cleared when the bar hides, and set again whenever it shows (also after a gap between
@@ -162,7 +160,7 @@ function showQuip() {
     if (run.textContent !== item.text) {
       run.getAnimations().forEach((a) => a.cancel());
       run.textContent = item.text;
-      scrollRun();
+      scrollRun(item);
       // A new item gets its own full time on screen. The same item with a new score or clock
       // (a refresh) keeps the time it already had.
       if (moved || tickTimer === null) scheduleTick();
@@ -199,11 +197,12 @@ const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const SCROLL_PX_PER_S = 55;
 const SCROLL_WAIT_MS = 1000;
 const SCROLL_HOLD_MS = 1300;
-let dwell = TICK_MS; // how long the item on show stays up
-function scrollRun() {
+let dwell = 4500; // how long the item on show stays up (set per item by scrollRun)
+function scrollRun(item) {
   const run = $("quip-run");
   const over = run.offsetWidth - $("quip-text").clientWidth;
-  dwell = TICK_MS;
+  const base = itemTime(item); // live games stay longest, games still to play shortest
+  dwell = base;
   if (over <= 2 || reduceMotion.matches || !run.animate) return;
   const ms = (over / SCROLL_PX_PER_S) * 1000;
   run.animate([{ transform: "translateX(0)" }, { transform: `translateX(${-over}px)` }], {
@@ -212,7 +211,7 @@ function scrollRun() {
     easing: "linear",
     fill: "forwards",
   });
-  dwell = Math.max(TICK_MS, SCROLL_WAIT_MS + ms + SCROLL_HOLD_MS);
+  dwell = Math.max(base, SCROLL_WAIT_MS + ms + SCROLL_HOLD_MS);
 }
 
 let tickerPass = 0; // full passes through the games so far; moves the comments along each pass

@@ -24,7 +24,7 @@ test("scoreItems: live first, then finished, then still to play; away @ home; li
   assert.deepEqual(items, [
     { text: "DAL 17 – PHI 14 · 8:42 - 3rd", live: true },
     { text: "WSH 24 – NYG 21 · Final", live: false },
-    { text: "KC @ DEN · Sun 4:25 PM", live: false },
+    { text: "KC @ DEN · Sun 4:25 PM", live: false, upcoming: true },
     { text: "BUF @ MIA · postponed", live: false },
   ]);
   assert.deepEqual(scoreItems(null), []);
@@ -170,10 +170,14 @@ test("the ticker's request goes out first, alongside the weeks, instead of after
   assert.equal(order[0], "ticker");
 });
 
-test("scoreItems: upcoming games on a later day are left out when asked (a Thursday shows its own game)", () => {
-  const today = (iso) => iso.startsWith("2026-11-13"); // Thursday: KC @ DEN on Sunday is left out
-  const items = scoreItems(sb, () => "later", today);
-  assert.deepEqual(items.map((i) => i.text), ["DAL 17 – PHI 14 · 8:42 - 3rd", "WSH 24 – NYG 21 · Final", "BUF @ MIA · postponed"]);
-  // a game still to play today stays in
-  assert.ok(scoreItems(sb, () => "4:25 PM", (iso) => iso.startsWith("2026-11-15T21")).some((i) => i.text === "KC @ DEN · 4:25 PM"));
+test("itemTime: live games stay longest, games still to play shortest, the rest in between", async () => {
+  const { itemTime, ITEM_MS } = await import("../js/ticker.js");
+  const items = scoreItems(sb, () => "Sun 4:25 PM");
+  assert.equal(itemTime(items.find((i) => i.live)), ITEM_MS.live);
+  assert.equal(itemTime(items.find((i) => i.upcoming)), ITEM_MS.upcoming);
+  assert.equal(itemTime(items.find((i) => i.text.includes("Final"))), ITEM_MS.other);
+  assert.equal(itemTime({ text: "Fun fact: x", comment: true }), ITEM_MS.other);
+  assert.ok(ITEM_MS.live > ITEM_MS.other && ITEM_MS.other > ITEM_MS.upcoming);
+  // every game of the week is in the ticker, including later days
+  assert.ok(items.some((i) => i.text === "KC @ DEN · Sun 4:25 PM"));
 });

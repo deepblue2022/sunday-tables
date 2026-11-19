@@ -7,22 +7,24 @@ import { fmtMoney } from "./render.js";
 const short = (name) => String(name).split(" ").filter((w) => !["Jr.", "Sr.", "II", "III", "IV"].includes(w)).pop();
 const dollars = (cents) => fmtMoney(Math.abs(cents)).replace("+", "");
 
+// How long an item stays on screen (before any extra time a long item needs to scroll): live
+// games longest, games still to play a quick glance, everything else in between.
+export const ITEM_MS = { live: 7000, upcoming: 3000, other: 4500 };
+export const itemTime = (item) => (item?.live ? ITEM_MS.live : item?.upcoming ? ITEM_MS.upcoming : ITEM_MS.other);
+
 // Is any NFL game being played right now? The banner only shows while one is.
 export const hasLiveGame = (scoreboard) => Boolean(scoreboard?.games?.some((g) => g.phase === "in"));
 
-// One item per game: {text, live}. `fmtKickoff` formats an ISO time ("Sun 1:00 PM").
-// `isToday(iso)`, if given, leaves out games still to play on a later day, so on a Thursday the
-// one live game isn't lost among Sunday's whole slate.
-export function scoreItems(scoreboard, fmtKickoff = (iso) => iso, isToday = null) {
+// One item per game: {text, live, upcoming?}. `fmtKickoff` formats an ISO time ("Sun 1:00 PM").
+export function scoreItems(scoreboard, fmtKickoff = (iso) => iso) {
   if (!scoreboard?.games?.length) return [];
   const rank = { in: 0, done: 1, pre: 2, unresolved: 3 };
   return [...scoreboard.games]
-    .filter((g) => g.phase !== "pre" || !isToday || isToday(g.kickoff))
     .sort((a, b) => rank[a.phase] - rank[b.phase] || String(a.kickoff).localeCompare(String(b.kickoff)))
     .map((g) => {
       const home = g.home ?? g.teams[1];
       const away = g.teams.find((t) => t !== home) ?? g.teams[0];
-      if (g.phase === "pre") return { text: `${away} @ ${home} · ${fmtKickoff(g.kickoff)}`, live: false };
+      if (g.phase === "pre") return { text: `${away} @ ${home} · ${fmtKickoff(g.kickoff)}`, live: false, upcoming: true };
       if (g.phase === "unresolved") return { text: `${away} @ ${home} · postponed`, live: false };
       const s = g.score ?? {};
       const line = `${away} ${s[away] ?? 0} – ${home} ${s[home] ?? 0}`;
