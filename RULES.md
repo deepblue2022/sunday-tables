@@ -17,6 +17,11 @@
 - Every other owner pays the winner (winner pts - their pts) x $2
 - Ties for the top split the column's winnings; tied winners pay each other nothing
 
+## Season
+- The regular season is Weeks 1-18; the overall winner and the money are decided on the regular season only.
+  A playoff runs after Week 18 and is separate.
+- A Thanksgiving event also counts toward the regular season (details to be added).
+
 ## Weekly workflow
 All commands run from this folder. The site is the files in this folder; publishing is `git push`.
 

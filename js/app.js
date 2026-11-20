@@ -2,6 +2,20 @@
 import { newState, refresh, statusLine, bannerLines, checkIndex, keptRecorded } from "./view.js";
 import { renderTeamTable, renderLightning, renderSettlement, renderStandings, renderCard, nextSort, esc } from "./render.js";
 import { scoreItems, seasonFacts, tickerItems, hasLiveGame, itemTime } from "./ticker.js";
+import { analyticsFacts } from "./analytics.js";
+
+// The fun facts (including the luck and close-call analytics) only change when the data files
+// do, so they are worked out once per load of the data (the ticker asks every few seconds).
+let insights = { files: null, facts: [] };
+function seasonInsights() {
+  if (insights.files !== state.weekFiles) {
+    insights = {
+      files: state.weekFiles,
+      facts: seasonFacts(model.weeks, state.league, analyticsFacts(state.weekFiles, state.league)),
+    };
+  }
+  return insights;
+}
 
 const TIMEOUT_MS = 15000;
 const RETRY_MS = 60000;
@@ -133,7 +147,7 @@ function buildTicker() {
   const games = scoreItems(scoreboard, kickoff);
   const every = 3;
   // each pass through the games shows the next facts along
-  return tickerItems({ games, comments: seasonFacts(model.weeks, state.league), every, turn: tickerPass * Math.floor(games.length / every) });
+  return tickerItems({ games, comments: seasonInsights().facts, every, turn: tickerPass * Math.floor(games.length / every) });
 }
 
 // The rule that keeps the ticker moving: whenever the bar is up, a tick is pending. The pending

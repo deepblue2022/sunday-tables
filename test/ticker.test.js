@@ -181,3 +181,33 @@ test("itemTime: live games stay longest, games still to play shortest, the rest 
   // every game of the week is in the ticker, including later days
   assert.ok(items.some((i) => i.text === "KC @ DEN · Sun 4:25 PM"));
 });
+
+test("more fun facts: idle picks, most-picked player, biggest payday, closest pot, one-week sweep, best average, longest streak", () => {
+  const read = (p) => JSON.parse(readFileSync(new URL(`../data/${p}`, import.meta.url), "utf8"));
+  const realLeague = read("league.json");
+  const weeks = [];
+  for (let w = 1; w <= 10; w++) {
+    const f = read(`weeks/2026-${String(w).padStart(2, "0")}.json`);
+    weeks.push({ week: w, recorded: true, result: scoreWeek(f, f.recorded.players, realLeague) });
+  }
+  const b = seasonFacts(weeks, realLeague).map(bare);
+  for (const want of [
+    "Galli has had 4 picks not play this season, the most in the league.",
+    "Jahmyr Gibbs is the most-picked player this season: 43 times.",
+    "The biggest side-pot payday this season is Kevin's +$290 from RB4 in Week 7 (Pollard, 32).",
+    "The closest Team pot this season: JD beat Kevin by 1 in Week 8.",
+    "Mxue won 4 side pots in Week 9, the most in one week this season.",
+    "JD has the best average Team table this season: 92.5.",
+    "JohnO's 5 weeks up in a row (Weeks 4 to 8) is the longest streak this season.",
+  ]) assert.ok(b.includes(want), `missing: ${want}\n${b.join("\n")}`);
+});
+
+test("more fun facts stay quiet on ties and small numbers", () => {
+  // two identical weeks where every owner scores the same: no sole leader anywhere
+  const level = () => {
+    const { weekFile, playersById } = build({}, {});
+    return { week: 1, recorded: true, result: scoreWeek(weekFile, playersById, league) };
+  };
+  const b = seasonFacts([level(), { ...level(), week: 2 }], league).map(bare);
+  assert.ok(!b.some((x) => /not play|most-picked|best average|closest Team pot|side pots in Week|in a row/.test(x)), b.join("\n"));
+});

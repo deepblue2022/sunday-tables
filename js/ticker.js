@@ -38,7 +38,8 @@ export const LEAD_INS = ["Fun fact:", "Did you know?", "Stat check:", "By the nu
 
 // Fun facts from the locked-in weeks. `weeks` is the page model's weeks ({week, recorded,
 // result}); "side pot" is a Lightning column.
-export function seasonFacts(weeks, league) {
+// `extra`: more facts worked out elsewhere (js/analytics.js), given lead-ins along with these.
+export function seasonFacts(weeks, league, extra = []) {
   const done = weeks.filter((w) => w.recorded && w.result).sort((a, b) => a.week - b.week);
   if (!done.length) return [];
   const owners = league.owners;
@@ -90,6 +91,69 @@ export function seasonFacts(weeks, league) {
   const teams = done.flatMap((w) => owners.map((o) => ({ o, week: w.week, total: w.result.team.rows[o.key].total })));
   const tb = teams.reduce((a, b) => (b.total > a.total ? b : a));
   fact(`The best Team table this season is ${tb.o.display}'s ${tb.total} in Week ${tb.week}.`);
+
+  // ---- more variety ----
+  // the one owner with the most of something (no fact when it's a tie at the top)
+  const soleTop = (counts) => {
+    const top = Math.max(...counts.values());
+    const who = [...counts].filter(([, n]) => n === top);
+    return who.length === 1 ? { key: who[0][0], n: top } : null;
+  };
+  const name = (key) => owners.find((o) => o.key === key)?.display ?? key;
+  const everyCell = (w, o) => [...w.result.team.rows[o.key].players, ...w.result.lightning.columns.map((c) => c.cells[o.key])];
+
+  // most picks that didn't play (DNP or bye)
+  const idle = new Map(owners.map((o) => [o.key, done.reduce((n, w) => n + everyCell(w, o).filter((c) => c.state === "dnp" || c.state === "bye").length, 0)]));
+  const mostIdle = soleTop(idle);
+  if (mostIdle && mostIdle.n >= 2) fact(`${name(mostIdle.key)} has had ${mostIdle.n} picks not play this season, the most in the league.`);
+
+  // the most-picked player, across every owner and both tables
+  const picks = new Map();
+  for (const w of done) for (const o of owners) for (const c of everyCell(w, o)) picks.set(c.name, (picks.get(c.name) ?? 0) + 1);
+  const popular = soleTop(picks);
+  if (popular) fact(`${popular.key} is the most-picked player this season: ${popular.n} times.`);
+
+  // the biggest single side-pot payday
+  const paydays = done.flatMap((w) => w.result.lightning.columns.filter((c) => c.winners.length === 1).map((c) => ({ w, c, o: c.winners[0] })));
+  if (paydays.length) {
+    const p = paydays.reduce((a, b) => (b.c.money[b.o] > a.c.money[a.o] ? b : a));
+    const cell = p.c.cells[p.o];
+    fact(`The biggest side-pot payday this season is ${name(p.o)}'s +${dollars(p.c.money[p.o])} from ${p.c.name} in Week ${p.w.week} (${short(cell.name)}, ${cell.points}).`);
+  }
+
+  // the closest Team pot finish
+  const finishes = done
+    .map((w) => {
+      const t = owners.map((o) => ({ key: o.key, total: w.result.team.rows[o.key].total })).sort((a, b) => b.total - a.total);
+      return { week: w.week, first: t[0], second: t[1], margin: t[0].total - t[1].total };
+    })
+    .filter((f) => f.margin > 0);
+  if (finishes.length) {
+    const c = finishes.reduce((a, b) => (b.margin < a.margin ? b : a));
+    if (c.margin <= 5) fact(`The closest Team pot this season: ${name(c.first.key)} beat ${name(c.second.key)} by ${c.margin} in Week ${c.week}.`);
+  }
+
+  // most side pots won in a single week
+  const sweeps = done.flatMap((w) => owners.map((o) => ({ o, week: w.week, n: w.result.lightning.columns.filter((c) => c.winners.length === 1 && c.winners[0] === o.key).length })));
+  const sw = sweeps.reduce((a, b) => (b.n > a.n ? b : a));
+  if (sw.n >= 3 && sweeps.filter((s) => s.n === sw.n).length === 1) fact(`${sw.o.display} won ${sw.n} side pots in Week ${sw.week}, the most in one week this season.`);
+
+  // the best average Team table
+  const avg = new Map(owners.map((o) => [o.key, done.reduce((n, w) => n + w.result.team.rows[o.key].total, 0) / done.length]));
+  const bestAvg = soleTop(avg);
+  if (bestAvg && done.length >= 3) fact(`${name(bestAvg.key)} has the best average Team table this season: ${bestAvg.n.toFixed(1)}.`);
+
+  // the longest run of weeks up this season (not just the current one)
+  let longest = null;
+  for (const o of owners) {
+    let run = 0;
+    for (const w of done) {
+      run = w.result.settlement[o.key].total > 0 ? run + 1 : 0;
+      if (run >= 4 && (!longest || run > longest.run)) longest = { o, run, end: w.week };
+    }
+  }
+  if (longest) fact(`${longest.o.display}'s ${longest.run} weeks up in a row (Weeks ${longest.end - longest.run + 1} to ${longest.end}) is the longest streak this season.`);
+  for (const x of extra) fact(x);
   return facts;
 }
 
