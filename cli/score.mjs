@@ -8,7 +8,7 @@
 import { readFile, writeFile, rename } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { scoreWeek, standings, derivePlayers, twoPtWarnings } from "../js/scoring.js";
+import { scoreWeek, standings, derivePlayers, twoPtWarnings, pickOrder, pickOrderProblem } from "../js/scoring.js";
 import { loadLive, fetchRosters, fetchScoreboard, playedTeams, API } from "../js/espn.js";
 import { resolveDraft, applyPlayedTeams, recordWeek, zeros, teamMismatches, formatWeek, gatherWeeks, assertWeekIdentity, parseArgs } from "./lib.mjs";
 
@@ -62,6 +62,8 @@ async function cmdResolve({ draft: draftArg, out }) {
     Object.assign(played, playedTeams(await fetchFn(`${API}/summary?event=${g.id}`)));
   }
   const { weekFile, changes } = applyPlayedTeams(resolved, played);
+  const orderProblem = pickOrderProblem(weekFile, league);
+  if (orderProblem) console.error(`WARNING: ${orderProblem}`);
   for (const c of changes) console.error(`Note: ${c.name} is on ${c.from} now but played this week for ${c.to}; using ${c.to}.`);
   if (out) {
     await writeJson(path.resolve(process.cwd(), out), weekFile);
@@ -97,7 +99,9 @@ async function cmdWeek({ season, week, record }) {
 
   const status = weekFile.recorded ? "recorded" : result.final ? "final, not recorded" : "provisional";
   console.log(`${season} week ${week} (${status})\n`);
-  console.log(formatWeek(result, standings(baseline, weeks, league), league));
+  console.log(formatWeek(result, standings(baseline, weeks, league), league, pickOrder(weekFile, league)));
+  const orderProblem = pickOrderProblem(weekFile, league);
+  if (orderProblem) console.log(`\nWARNING: ${orderProblem}`);
   for (const w of warnings) console.log(`\nWARNING: ${w}`);
   for (const e of errors) console.log(`\nWARNING: could not load ${e}`);
   for (const t of twoPt) console.log(`\n2-PT CHECK: ${t}`);

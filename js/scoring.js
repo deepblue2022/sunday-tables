@@ -324,3 +324,22 @@ export function twoPtWarnings(weekFile, scoreboard, gamesById) {
   }
   return [...new Set(out)];
 }
+
+// The Lightning draft order (lightning_table.pick_order) is display-only, so a bad one never
+// stops a week from scoring: it is simply not used. `isPickOrder` is the one check, shared by
+// the site and the CLI; `pickOrder` returns the order or null; `pickOrderProblem` says what is
+// wrong, for the CLI to warn about.
+export function isPickOrder(order, league) {
+  const keys = league.owners.map((o) => o.key);
+  return Array.isArray(order) && order.length === keys.length && keys.every((k) => order.includes(k));
+}
+export function pickOrderProblem(weekFile, league) {
+  const order = weekFile?.lightning_table?.pick_order;
+  if (order === undefined) return null;
+  if (isPickOrder(order, league)) return null;
+  return `lightning_table.pick_order must list every owner once (${league.owners.map((o) => o.key).join(", ")}); showing league order instead`;
+}
+export function pickOrder(weekFile, league) {
+  const order = weekFile?.lightning_table?.pick_order;
+  return isPickOrder(order, league) ? order : null;
+}

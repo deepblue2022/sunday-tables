@@ -1,6 +1,6 @@
 // Pure helpers for the CLI: name resolution, recording, and plain-text output.
 import { fmtMoney, STATE_TAG, showsDash } from "../js/render.js";
-import { validateWeekFile } from "../js/scoring.js";
+import { validateWeekFile, isPickOrder } from "../js/scoring.js";
 
 const TABLES = ["team_table", "lightning_table"];
 const OFFENCE = ["QB", "RB", "WR", "TE", "FB"];
@@ -62,7 +62,7 @@ export function resolveDraft(draft, rosterPlayers, league) {
         return null;
       });
     }
-    out[t] = { columns: draft[t].columns, rosters };
+    out[t] = { columns: draft[t].columns, ...(draft[t].pick_order ? { pick_order: draft[t].pick_order } : {}), rosters };
   }
   if (problems.length) throw new Error(`Could not resolve ${problems.length} player(s):\n  ${problems.join("\n  ")}`);
   if (league) validateWeekFile(out, league);
@@ -137,7 +137,8 @@ const cellText = (c) => {
 const flag = (provisional) => (provisional ? " (provisional)" : "");
 
 // Plain-text report of a scored week plus the standings.
-export function formatWeek(result, standings, league) {
+// `pickOrder` (optional): the Lightning section lists owners in draft order, as the site does.
+export function formatWeek(result, standings, league, pickOrder = null) {
   const owners = league.owners;
   const lines = [];
   const moneyRow = (label, byOwner) => `${pad(label, 20)}${owners.map((o) => pad(fmtMoney(byOwner[o.key]), 10)).join("")}`;
@@ -150,6 +151,9 @@ export function formatWeek(result, standings, league) {
   }
   lines.push(result.team.winners.length ? `Pot: ${result.team.winners.join(" & ")}` : "Pot: not started");
 
+  const drafted = isPickOrder(pickOrder, league) ? pickOrder.map((k) => owners.find((o) => o.key === k)) : owners;
+  const lightningHeader = `${pad("", 20)}${drafted.map((o) => pad(o.display, 10)).join("")}`;
+  const lightningRow = (label, byOwner) => `${pad(label, 20)}${drafted.map((o) => pad(fmtMoney(byOwner[o.key]), 10)).join("")}`;
   lines.push("", "== Lightning table ==");
   for (const col of result.lightning.columns) {
     const winner = !col.winners.length
@@ -157,11 +161,11 @@ export function formatWeek(result, standings, league) {
       : col.winners.length === owners.length
         ? "all tied"
         : `winner ${col.winners.join(" & ")}`;
-    const cells = owners.map((o) => `${o.key}:${cellText(col.cells[o.key])}`).join("  ");
+    const cells = drafted.map((o) => `${o.key}:${cellText(col.cells[o.key])}`).join("  ");
     lines.push(`${pad(col.name + flag(col.provisional), 20)}${pad(winner, 22)}${cells}`);
   }
-  lines.push("", header);
-  for (const col of result.lightning.columns) lines.push(moneyRow(col.name, col.money));
+  lines.push("", drafted === owners ? "$ by column" : "$ by column (pick order)", lightningHeader);
+  for (const col of result.lightning.columns) lines.push(lightningRow(col.name, col.money));
 
   lines.push("", `== Settlement${flag(!result.final)} ==`, header);
   const part = (k) => Object.fromEntries(owners.map((o) => [o.key, result.settlement[o.key][k]]));

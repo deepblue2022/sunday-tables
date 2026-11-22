@@ -30,6 +30,11 @@ All commands run from this folder. The site is the files in this folder; publish
 2. **Add the new week:** write the two pasted tables into a draft file (same shape as
    `test/fixtures/2026-09/week-draft.json`), using ESPN full display names
    (e.g. "James Cook III", "Michael Penix Jr.", "Kenneth Walker III"). Column order can differ week to week.
+   The Lightning table is a draft: owners are pasted in pick order and columns in round order (round i's
+   position is chosen by the i-th owner, who picks first that round). Keep the columns as pasted and add
+   `"pick_order": ["Vince", "Art", ...]` (the owners as pasted) to the Lightning table; the site lists the
+   table in that order and marks each round's first pick with ◆. A pick order that doesn't list every owner
+   once is ignored (the CLI warns) and never stops the week from scoring.
 3. **Resolve names:** `npm run score -- resolve <draft.json> --out data/weeks/<season>-<week>.json`.
    Fix any names it cannot find and re-run.
 4. **List the week** in `data/weeks/index.json`.

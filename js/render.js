@@ -1,5 +1,5 @@
 // Presentation helpers: pure string builders, no DOM. Shared by the page and the CLI.
-import { pointsBreakdown, statsPoints } from "./scoring.js";
+import { pointsBreakdown, statsPoints, isPickOrder } from "./scoring.js";
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
@@ -29,16 +29,18 @@ const moneyCell = (cents, extra = "") => {
 const note = (text) => `<span class="note">${esc(text)}</span>`;
 // A player's box. `key` lets the page find the player again when the box is tapped for the stats card.
 // A player yet to play shows his kickoff time (via `fmtKickoff`) in place of the dash, when known.
-const playerCell = (c, highlight, key, fmtKickoff = null) => {
+// `first`: this was the first pick of its round in the Lightning draft (marked ◆).
+const playerCell = (c, highlight, key, fmtKickoff = null, first = false) => {
   const tag = STATE_TAG[c.state] ? `<span class="tag ${c.state}">${STATE_TAG[c.state]}</span>` : "";
   const kick = c.state === "not_started" && c.game?.kickoff && fmtKickoff ? fmtKickoff(c.game.kickoff) : null;
   const points = kick ? `<span class="kick">${esc(kick)}</span>` : esc(showsDash(c.state) ? DASH : c.points);
   const star = c.override ? `<sup class="star" aria-hidden="true">*</sup>` : "";
-  const label = `${c.name}, ${showsDash(c.state) ? "no score yet" : `${c.points} points`}${c.override ? " (settled score)" : ""}. Show stats`;
+  const label = `${c.name}${first ? " (first pick of the round)" : ""}, ${showsDash(c.state) ? "no score yet" : `${c.points} points`}${c.override ? " (settled score)" : ""}. Show stats`;
+  const mark = first ? `<span class="first" aria-hidden="true">◆</span>` : "";
   return (
     `<td class="cell${highlight ? " win" : ""} ${esc(c.state)}">` +
     `<button type="button" class="pcell" data-card="${esc(key)}" aria-label="${esc(label)}">` +
-    `<span class="pname">${esc(c.name)}</span><span class="pts">${points}</span>${star}${tag}</button></td>`
+    `<span class="pname">${esc(c.name)}${mark}</span><span class="pts">${points}</span>${star}${tag}</button></td>`
   );
 };
 const wrap = (table, provisional) => `<div class="table-wrap${provisional ? " prov" : ""}">${table}</div>`;
@@ -69,19 +71,27 @@ export function renderTeamTable(result, league, columns, fmtKickoff = null) {
   return `${wrap(table, team.provisional)}<p class="pot">${esc(line)}</p>`;
 }
 
-export function renderLightning(result, league, fmtKickoff = null) {
+// `pickOrder` (the week's lightning_table.pick_order): owners in draft order. Rows follow it, as
+// in the pasted table, and round i's first pick (made by pickOrder[i]) is marked ◆, with a key.
+// Without it, rows are in league order and nothing is marked.
+export function renderLightning(result, league, fmtKickoff = null, pickOrder = null) {
   const cols = result.lightning.columns;
+  const drafted = isPickOrder(pickOrder, league);
+  const order = drafted ? pickOrder.map((k) => league.owners.find((o) => o.key === k)) : league.owners;
+  const firstPick = (i, owner) => drafted && pickOrder[i] === owner;
   const head = (extra) => {
     const cells = cols.map((c) => `<th>${esc(c.name)}${c.provisional && c.started ? note("provisional") : ""}</th>`).join("");
     return `<tr><th>Team</th>${cells}${extra}</tr>`;
   };
-  const players = league.owners
+  const players = order
     .map((o) => {
-      const cells = cols.map((c, i) => playerCell(c.cells[o.key], highlighted(c.winners, league).includes(o.key), `l|${i}|${o.key}`, fmtKickoff)).join("");
+      const cells = cols
+        .map((c, i) => playerCell(c.cells[o.key], highlighted(c.winners, league).includes(o.key), `l|${i}|${o.key}`, fmtKickoff, firstPick(i, o.key)))
+        .join("");
       return `<tr>${rowHead(o)}${cells}</tr>`;
     })
     .join("\n");
-  const money = league.owners
+  const money = order
     .map((o) => {
       const cells = cols.map((c) => moneyCell(c.money[o.key])).join("");
       return `<tr>${rowHead(o)}${cells}${moneyCell(result.lightning.net[o.key], "net ")}</tr>`;
@@ -90,6 +100,7 @@ export function renderLightning(result, league, fmtKickoff = null) {
   const anyProv = cols.some((c) => c.provisional);
   return (
     wrap(`<table class="lightning"><thead>${head("")}</thead><tbody>\n${players}\n</tbody></table>`, anyProv) +
+    (drafted ? `<p class="pick-key"><span class="first" aria-hidden="true">◆</span> chose this round's position and picked first</p>` : "") +
     `<h3>$ by column</h3>` +
     wrap(`<table class="grid"><thead>${head("<th>Net</th>")}</thead><tbody>\n${money}\n</tbody></table>`, anyProv)
   );

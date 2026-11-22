@@ -3,6 +3,7 @@ import { newState, refresh, statusLine, bannerLines, checkIndex, keptRecorded } 
 import { renderTeamTable, renderLightning, renderSettlement, renderStandings, renderCard, nextSort, esc } from "./render.js";
 import { scoreItems, seasonFacts, tickerItems, hasLiveGame, itemTime } from "./ticker.js";
 import { analyticsFacts } from "./analytics.js";
+import { pickOrder } from "./scoring.js";
 
 // The fun facts (including the luck and close-call analytics) only change when the data files
 // do, so they are worked out once per load of the data (the ticker asks every few seconds).
@@ -118,7 +119,7 @@ function render(dataProblem) {
   const weekFile = week && state.weekFiles.find((f) => f.season === week.season && f.week === week.week);
   shown = result ? { result, weekFile, loaded: Boolean(week.result) } : null;
   setHtml("team", result ? renderTeamTable(result, league, weekFile.team_table.columns, kickoff) : "");
-  setHtml("lightning", result ? renderLightning(result, league, kickoff) : "");
+  setHtml("lightning", result ? renderLightning(result, league, kickoff, pickOrder(weekFile, league)) : "");
   // No settlement to show until some real scores have loaded.
   setHtml("settlement", week?.result ? renderSettlement(week.result, league, sorts.settlement) : "");
   setHtml(

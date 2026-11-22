@@ -23,12 +23,17 @@ The scorekeeper pastes two tables per week: the Team table (QB/RB/RB/WR/WR) and 
    and agree each `two_pt_fixes` entry (RULES.md) before recording.
 2. **Draft:** write `/tmp/weekN-draft.json` in the shape of `test/fixtures/2026-09/week-draft.json`, with
    ESPN full display names ("James Cook III", "Michael Penix Jr.", "C.J. Stroud"). Reuse full names from
-   earlier `data/weeks/*.json` files where the same player appears.
+   earlier `data/weeks/*.json` files where the same player appears. The Lightning table is a draft: its
+   owners are pasted in pick order and its columns in round order (round i's position is chosen by the
+   i-th owner, who picks first that round). Keep the columns in the pasted order and add the owners, as
+   pasted, as `"pick_order": [...]` in `lightning_table`; the site shows the table in that order and marks
+   each round's first pick with ◆. A pick order that doesn't list every owner once is ignored, with a
+   warning at resolve and when showing the week. Fix it; it never stops the week from scoring.
 3. **Resolve:** `npm run score -- resolve /tmp/weekN-draft.json --out data/weeks/<season>-<NN>.json`.
    Fix any reported names and re-run.
 4. **List** the week in `data/weeks/index.json` (keep it sorted).
-5. **Show** the scorekeeper the result (`npm run score -- <season> <week>`) and list every short name you
-   had to guess. **Wait for confirmation** before committing.
+5. **Show** the scorekeeper the result (`npm run score -- <season> <week>`), list every short name you
+   had to guess, and pass on any `WARNING` line. **Wait for confirmation** before committing.
 6. `npm test`, commit, push to `main`.
 
 **Past weeks** (earlier than `data/baseline.json` `through_week`): steps 2-4, show the week's money and
