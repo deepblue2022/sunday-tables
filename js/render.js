@@ -139,7 +139,8 @@ export function renderLightning(result, league, fmtKickoff = null, pickOrder = n
 
 const yds = (n) => `${n < 0 ? "−" : ""}${Math.abs(n)} yds`;
 const td = (n) => (n ? `, ${n} TD` : "");
-const pts = (yardPts, tdPts) => (tdPts ? `${yardPts} + ${tdPts}` : `${yardPts}`);
+const signed = (n) => (n < 0 ? `−${Math.abs(n)}` : `${n}`);
+const pts = (yardPts, tdPts) => (tdPts ? `${signed(yardPts)} + ${tdPts}` : signed(yardPts));
 const n0 = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
 // The stat lines of a saved stat line, one per category the player touched.

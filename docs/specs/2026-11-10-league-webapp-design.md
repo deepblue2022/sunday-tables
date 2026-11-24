@@ -25,7 +25,7 @@ Success looks like:
 Player points, applied identically in both tables:
 - Passing: floor(yds / 20) + 3 per TD + 1 per 2-pt conversion pass
 - Rushing and receiving: floor(yds / 10) each + 6 per TD + 2 per 2-pt conversion run or catch
-- Each yardage category floored separately; negative yardage counts as 0; no penalties for INTs, fumbles, etc.
+- Each yardage category scored separately with the decimals dropped (rounded toward zero, so negative yardage can cost points: −11 rushing = −1); no penalties for INTs, fumbles, etc.
 - A player's points always include 2-pt conversions, even with no passing, rushing or receiving stat line.
 
 Team table (QB / RB / RB / WR / WR): $20 buy-in each, highest total takes the $140 pot; ties split.

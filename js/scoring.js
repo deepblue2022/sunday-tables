@@ -9,7 +9,9 @@ const num = (v) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 };
-const yards = (v, per) => Math.floor(Math.max(num(v), 0) / per);
+// Each yardage category on its own, decimals dropped (rounded toward zero): negative yards can
+// cost points (−11 rushing yards = −1), but only once they reach a whole point (−8 = 0).
+const yards = (v, per) => Math.trunc(num(v) / per) || 0; // `|| 0`: never −0
 
 // How a stat line turns into points, one entry per category: yards points, touchdown points.
 // playerPoints is the sum, so the stats card and the scores can never disagree.

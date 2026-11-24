@@ -8,9 +8,14 @@ test("playerPoints floors each category and adds TDs and 2-pt", () => {
   assert.equal(playerPoints({ rushYds: 102, rushTD: 1, recYds: 41, recTD: 2 }), 32); // Walker wk9
 });
 
-test("playerPoints counts negative yardage as 0", () => {
-  assert.equal(playerPoints({ passYds: 242, passTD: 1, rushYds: -1 }), 15);
-  assert.equal(playerPoints({ passYds: -3, rushYds: 57 }), 5);
+test("playerPoints: negative yards cost points once they reach a whole point (decimals dropped)", () => {
+  assert.equal(playerPoints({ passYds: 242, passTD: 1, rushYds: -1 }), 15); // −1 rushing = 0
+  assert.equal(playerPoints({ passYds: -3, rushYds: 57 }), 5); // −3 passing = 0
+  assert.equal(playerPoints({ rushYds: -11, recYds: 79, recTD: 1 }), 12); // Jefferson wk5: −1 + 7 + 6
+  assert.equal(playerPoints({ rushYds: -9 }), 0);
+  assert.equal(playerPoints({ rushYds: -10 }), -1);
+  assert.equal(playerPoints({ rushYds: -25, passYds: -40 }), -4); // −2 and −2: a total can be negative
+  assert.ok(!Object.is(playerPoints({ rushYds: -5 }), -0), "never −0");
 });
 
 test("playerPoints counts a 2-pt conversion with no stat line", () => {
@@ -33,9 +38,10 @@ test("BLOCKING lists the states that keep a week provisional", () => {
   assert.deepEqual(BLOCKING, ["live", "not_started", "unknown"]);
 });
 
-test("playerPoints floors rushing and receiving separately, clamping each", () => {
-  assert.equal(playerPoints({ rushYds: 9, recYds: 9 }), 0);
-  assert.equal(playerPoints({ rushYds: -15, recYds: 15 }), 1);
+test("playerPoints scores rushing and receiving separately, never netting them", () => {
+  assert.equal(playerPoints({ rushYds: 9, recYds: 9 }), 0); // not 18 yards = 1
+  assert.equal(playerPoints({ rushYds: -15, recYds: 15 }), 0); // −1 + 1
+  assert.equal(playerPoints({ rushYds: -8, recYds: 63 }), 6); // netted would be 55 = 5
 });
 
 test("splitCents refuses winners it cannot pay in full", () => {

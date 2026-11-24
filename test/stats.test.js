@@ -35,19 +35,19 @@ test("every recorded week: the stat line gives the saved points, except a listed
       }
     }
   }
-  // The one known settled correction: Week 5 Justin Jefferson, settled at 12 (rules: 13).
-  assert.deepEqual(corrections, ["2026 week 5 player 4262921"]);
+  // No settled corrections: Week 5 Justin Jefferson's 12 is the rules' score (−11 rushing = −1).
+  assert.deepEqual(corrections, []);
   const jj = recordedWeeks.find((f) => f.week === 5).recorded.players["4262921"];
   assert.equal(jj.points, 12);
-  assert.equal(jj.override.rules, 13);
+  assert.equal(jj.override, undefined);
 });
 
 test("pointsBreakdown adds up to playerPoints", () => {
   const line = { passYds: 287, passTD: 2, rushYds: -11, rushTD: 1, recYds: 48, recTD: 0 };
   const b = pointsBreakdown(line, 2);
-  assert.deepEqual(b, { pass: { yards: 14, td: 6 }, rush: { yards: 0, td: 6 }, rec: { yards: 4, td: 0 }, twoPt: 2 });
-  assert.equal(playerPoints(line, 2), 32);
-  assert.equal(statsPoints({ ...line, twoPt: 2 }), 32);
+  assert.deepEqual(b, { pass: { yards: 14, td: 6 }, rush: { yards: -1, td: 6 }, rec: { yards: 4, td: 0 }, twoPt: 2 });
+  assert.equal(playerPoints(line, 2), 31);
+  assert.equal(statsPoints({ ...line, twoPt: 2 }), 31);
 });
 
 test("statRows: one line per category touched, negative yards shown, points per line", () => {
@@ -56,7 +56,7 @@ test("statRows: one line per category touched, negative yards shown, points per 
     { label: "Rush", line: "6 car, 38 yds", points: "3" },
   ]);
   assert.deepEqual(statRows({ rushAtt: 1, rushYds: -11, rushTD: 0, rec: 6, recYds: 79, recTD: 1, twoPt: 2 }), [
-    { label: "Rush", line: "1 car, −11 yds", points: "0" },
+    { label: "Rush", line: "1 car, −11 yds", points: "−1" },
     { label: "Rec", line: "6 rec, 79 yds, 1 TD", points: "7 + 6" },
     { label: "2-pt", line: "conversion", points: "2" },
   ]);
@@ -66,19 +66,19 @@ test("statRows: one line per category touched, negative yards shown, points per 
 const jefferson = {
   name: "Justin Jefferson",
   team: "MIN",
-  points: 12,
   state: "final",
   stats: { rushAtt: 1, rushYds: -11, rushTD: 0, rec: 6, recYds: 79, recTD: 1 },
   game: { opp: "CLE", home: false },
-  override: { rules: 13, reason: "The scorer netted the yards." },
+  points: 11,
+  override: { rules: 12, reason: "Settled at 11 by the league." },
 };
 
 test("renderCard: a settled correction shows the rules total and the official score with its reason", () => {
   const html = renderCard(jefferson, "Art · WR2");
   assert.match(html, /Justin Jefferson/);
   assert.match(html, /Art · WR2 · MIN @ CLE · Final/);
-  assert.match(html, /By the rules<\/span><strong>13</);
-  assert.match(html, /\* Settled at 12<\/strong>, the official score\. The scorer netted the yards\./);
+  assert.match(html, /By the rules<\/span><strong>12</);
+  assert.match(html, /\* Settled at 11<\/strong>, the official score\. Settled at 11 by the league\./);
   assert.doesNotMatch(html, />Total</);
 });
 

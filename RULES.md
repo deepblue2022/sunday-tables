@@ -11,8 +11,10 @@ the **Team table** and the **Lightning table**. The site shows them live and kee
 ## 2. Scoring (both tables)
 - **Passing:** 1 point per 20 yards; 3 points per TD; 1 point per 2-point conversion pass.
 - **Rushing and receiving:** 1 point per 10 yards; 6 points per TD; 2 points per 2-point conversion run or catch.
-- **No decimals:** each yardage category is rounded down on its own (287 passing yards = 14, 48 rushing
-  yards = 4). Negative yards count as 0.
+- **No decimals:** each yardage category is scored on its own and the decimals are dropped (287 passing
+  yards = 14, 48 rushing yards = 4).
+- **Negative yards count:** a category with negative yards can cost points once it reaches a whole point
+  (−11 rushing yards = −1; −8 rushing yards = 0). A player's total can be negative.
 - **No penalties:** interceptions, fumbles, sacks and so on cost nothing.
 - **What doesn't score:** only passing, rushing and receiving count. Kick and punt returns (yards or
   touchdowns) and defensive or fumble-return touchdowns score nothing.
@@ -57,7 +59,7 @@ Thanksgiving week has the usual **main pool** (Team table and Lightning table, a
 
 ## 7. Rulings
 - **Settled scores:** if a week was paid on a score that differs from these rules, the paid score stands.
-  The site shows it with a `*` and explains it on the player's stats card (Week 5: Justin Jefferson, 12).
+  The site shows it with a `*` and explains it on the player's stats card. (None so far.)
 - **Cancelled or postponed games:** the week stays provisional (those players show "?") until the
   scorekeeper settles it.
 
