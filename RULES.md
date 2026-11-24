@@ -1,7 +1,7 @@
 # Sunday Tables: league rules
 
 Seven owners: Art, Mxue, Vince, Kevin, Galli, JD, JohnO. Every week each owner fills in two tables:
-the **Team table** and the **Lightning table**. The site (this repo) shows them live and keeps the money.
+the **Team table** and the **Lightning table**. The site shows them live and keeps the money.
 
 ## 1. Weekly picks
 - Picks are made on the day of the first game of the week. The scorekeeper posts both tables once the

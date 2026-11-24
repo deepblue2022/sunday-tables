@@ -118,16 +118,22 @@ export async function refresh(state, fetchFn, now = new Date()) {
     standingsProblem = err.message;
   }
 
-  // The live score ticker follows ESPN's current NFL week, so a Thursday game shows even before
-  // that week's tables are on the site. If it can't be reached, the ticker falls back to the
-  // latest week on the site; nothing else depends on it.
-  let tickerScoreboard = null;
+  // The live score ticker's week:
+  //  - ESPN's current NFL week, so a Thursday game shows even before that week's tables are on
+  //    the site;
+  //  - but a week on the site with a game being played wins when ESPN's current week has nothing
+  //    live (ESPN can be slow to move on, e.g. a Wednesday game before it has switched);
+  //  - and when ESPN can't be reached, the site's week.
+  // Nothing else depends on it.
   const current = await ticker;
-  if (current.failed) {
-    tickerScoreboard = weeks.filter((w) => !w.recorded && w.scoreboard).at(-1)?.scoreboard ?? null;
-  } else {
-    tickerScoreboard = current.scoreboard;
-  }
+  const live = (sb) => Boolean(sb?.games?.some((g) => g.phase === "in"));
+  // of the site's unrecorded weeks: the latest with a game on, else the latest
+  const open = weeks.filter((w) => !w.recorded && w.scoreboard);
+  const siteWeek = (open.filter((w) => live(w.scoreboard)).at(-1) ?? open.at(-1))?.scoreboard ?? null;
+  let tickerScoreboard;
+  if (current.failed) tickerScoreboard = siteWeek;
+  else if (!live(current.scoreboard) && live(siteWeek)) tickerScoreboard = siteWeek;
+  else tickerScoreboard = current.scoreboard;
   // A failed request tries again in a minute (a game may be on). Otherwise never stop looking
   // altogether: with nothing on and nothing scheduled (ESPN still showing a finished week),
   // check again in half an hour, so a tab left open on a computer all week still notices

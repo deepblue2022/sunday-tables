@@ -211,3 +211,37 @@ test("more fun facts stay quiet on ties and small numbers", () => {
   const b = seasonFacts([level(), { ...level(), week: 2 }], league).map(bare);
   assert.ok(!b.some((x) => /not play|most-picked|best average|closest Team pot|side pots in Week|in a row/.test(x)), b.join("\n"));
 });
+
+test("ESPN still on last week while a site week's game is live (e.g. Wednesday): the ticker follows the site's week", async () => {
+  const { newState, refresh } = await import("../js/view.js");
+  const { API } = await import("../js/espn.js");
+  const { weekFile } = build();
+  const baseline = { through_week: 0, totals: Object.fromEntries(league.owners.map((o) => [o.key, 0])) };
+  const ev = (id, state, completed, a, b) => ({ id, date: "2026-11-26T01:00Z", status: { type: { state, completed, shortDetail: state === "in" ? "5:00 - 1st" : "Final" } }, competitions: [{ competitors: [{ homeAway: "home", score: "7", team: { abbreviation: a } }, { homeAway: "away", score: "3", team: { abbreviation: b } }] }] });
+  const espnCurrent = { events: [ev("old", "post", true, "XXX", "YYY")] }; // ESPN's "current week": last week, all final
+  const siteWeek = { events: [ev("wed", "in", false, "AAA", "BBB")] }; // the site's week: Wednesday's game is on
+  const fetchFn = async (url) => (url === `${API}/scoreboard` ? espnCurrent : url.includes("/scoreboard") ? siteWeek : { boxscore: { players: [] } });
+  const model = await refresh(newState({ league, baseline, weekFiles: [weekFile] }), fetchFn);
+  assert.deepEqual(scoreItems(model.tickerScoreboard), [{ text: "BBB 3 – AAA 7 · 5:00 - 1st", live: true }]);
+  // once ESPN's current week has a live game of its own, the ticker follows ESPN again
+  const espnLive = { events: [ev("thu", "in", false, "DET", "CHI")] };
+  const later = await refresh(newState({ league, baseline, weekFiles: [weekFile] }), async (url) => (url === `${API}/scoreboard` ? espnLive : url.includes("/scoreboard") ? siteWeek : { boxscore: { players: [] } }));
+  assert.equal(scoreItems(later.tickerScoreboard)[0].text, "CHI 3 – DET 7 · 5:00 - 1st");
+});
+
+test("two weeks open on the site and ESPN unreachable: the ticker picks the one with a game on, not just the newest", async () => {
+  const { newState, refresh } = await import("../js/view.js");
+  const { API } = await import("../js/espn.js");
+  // Week 11's Monday game is on; Week 12 is posted but nothing has kicked off
+  const w11 = { ...build().weekFile, week: 11 };
+  const w12 = { ...build().weekFile, week: 12 };
+  const baseline = { through_week: 0, totals: Object.fromEntries(league.owners.map((o) => [o.key, 0])) };
+  const ev = (state) => ({ id: state, date: "2026-11-24T01:15Z", status: { type: { state, completed: false, shortDetail: state === "in" ? "2:00 - 4th" : "Sun 1:00 PM" } }, competitions: [{ competitors: [{ homeAway: "home", score: "21", team: { abbreviation: "AAA" } }, { homeAway: "away", score: "17", team: { abbreviation: "BBB" } }] }] });
+  const model = await refresh(newState({ league, baseline, weekFiles: [w11, w12] }), async (url) => {
+    if (url === `${API}/scoreboard`) throw new Error("down");
+    if (url.includes("week=11")) return { events: [ev("in")] };
+    if (url.includes("week=12")) return { events: [ev("pre")] };
+    return { boxscore: { players: [] } };
+  });
+  assert.deepEqual(scoreItems(model.tickerScoreboard), [{ text: "BBB 17 – AAA 21 · 2:00 - 4th", live: true }]);
+});

@@ -4,6 +4,7 @@ import { renderTeamTable, renderThanksgiving, renderLightning, renderSettlement,
 import { scoreItems, seasonFacts, tickerItems, hasLiveGame, itemTime } from "./ticker.js";
 import { analyticsFacts } from "./analytics.js";
 import { pickOrder } from "./scoring.js";
+import { rulesHtml } from "./rules.js";
 
 // The fun facts (including the luck and close-call analytics) only change when the data files
 // do, so they are worked out once per load of the data (the ticker asks every few seconds).
@@ -140,13 +141,14 @@ function render(dataProblem) {
 // ---------- Live score ticker ----------
 // (js/banter.js, the league commentary, is kept for later but not used yet.)
 
-// The ticker shows ESPN's current NFL week, whichever week the viewer is looking at below (and
-// even before that week is on the site): every game's score, with a league fun fact after every
-// few games. It is only up while a game is being played.
+// The ticker shows the NFL week being played, whichever week the viewer is looking at below:
+// ESPN's current week (even before its tables are on the site), or the site's week when that one
+// has a game on and ESPN's doesn't (js/view.js picks). Every game's score, with a league fun
+// fact after every few games. It is only up while a game is being played.
 let tickerList = [];
 
 function buildTicker() {
-  // ESPN's current NFL week (see js/view.js); the ticker is only up while a game is being played
+  // the week being played (js/view.js picks it); the ticker is only up while a game is being played
   const scoreboard = model.tickerScoreboard;
   if (!hasLiveGame(scoreboard)) return [];
   const games = scoreItems(scoreboard, kickoff);
@@ -312,6 +314,28 @@ $("card").addEventListener("close", () => {
   const key = cardKey;
   cardKey = null;
   [...document.querySelectorAll("button[data-card]")].find((b) => b.dataset.card === key)?.focus();
+});
+
+// ---------- Rules popup ----------
+// RULES.md is read fresh each time the popup opens, so a rules change shows up after a publish.
+async function showRules() {
+  const dialog = $("rules");
+  if (!dialog.open) dialog.showModal();
+  let html;
+  try {
+    const r = await fetch("RULES.md", { cache: "no-cache", signal: AbortSignal.timeout(TIMEOUT_MS) });
+    if (!r.ok) throw new Error();
+    const rules = rulesHtml(await r.text());
+    html = rules.html;
+  } catch {
+    html = '<p class="card-msg">Could not load the rules. Try again in a moment.</p>';
+  }
+  setHtml("rules-body", html);
+  $("rules-body").scrollTop = 0;
+}
+$("rules-open").addEventListener("click", showRules);
+$("rules").addEventListener("click", (e) => {
+  if (e.target === $("rules") || e.target.closest?.("[data-close]")) $("rules").close();
 });
 
 // Nothing can be shown at all (first load failed): say why and keep trying.
