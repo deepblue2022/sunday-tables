@@ -39,6 +39,18 @@ select, button {
 button { cursor: pointer; }
 button:disabled { opacity: 0.5; cursor: default; }
 #updated { color: var(--muted); font-size: 13px; }
+/* On a phone the header keeps the title, week, Refresh and Rules on one line: a smaller title and
+   tighter spacing, and Refresh becomes a ↻ icon. The week menu stays at 16px (smaller makes iPhones zoom). */
+#refresh .narrow { display: none; }
+@media (max-width: 480px) {
+  header { gap: 8px 5px; }
+  h1 { font-size: 17px; }
+  header select { padding: 6px; }
+  #refresh { padding: 6px 10px; }
+  #rules-open { padding: 6px 9px; }
+  #refresh .wide { display: none; }
+  #refresh .narrow { display: inline; font-size: 18px; line-height: 1; }
+}
 #status { color: var(--muted); margin: 0 0 4px; }
 /* The live ticker: a one-line bar pinned to the top of the screen while a game is on. */
 #quip {
@@ -172,7 +184,7 @@ body.empty section, body.empty #week, body.noweek section.week, body.nosettlemen
   <header>
     <h1 id="league">Sunday Tables</h1>
     <select id="week" aria-label="Week"></select>
-    <button id="refresh" type="button">Refresh</button>
+    <button id="refresh" type="button" aria-label="Refresh" title="Refresh"><span class="wide">Refresh</span><span class="narrow" aria-hidden="true">&#x21bb;</span></button>
     <button id="rules-open" type="button">Rules</button>
     <span id="updated"></span>
   </header>
