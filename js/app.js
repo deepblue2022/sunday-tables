@@ -1,7 +1,8 @@
 // Browser glue: load the data files, build the model (js/view.js), render it, and keep it fresh.
 import { newState, refresh, statusLine, bannerLines, checkIndex, keptRecorded } from "./view.js";
 import { renderTeamTable, renderThanksgiving, renderLightning, renderSettlement, renderStandings, renderCard, nextSort, esc } from "./render.js";
-import { scoreItems, seasonFacts, tickerItems, hasLiveGame, itemTime } from "./ticker.js";
+import { scoreItems, seasonFacts, tickerItems, hasLiveGame, itemTime, mixComments, passComments } from "./ticker.js";
+import { banterIfOn, tickerCommentary } from "./banter.js";
 import { analyticsFacts } from "./analytics.js";
 import { pickOrder } from "./scoring.js";
 import { rulesHtml } from "./rules.js";
@@ -54,8 +55,12 @@ async function loadData() {
   ]);
   checkIndex(index);
   if (!Array.isArray(league.owners)) throw new Error("data/league.json does not list the owners");
+  // The league commentary is optional and has its own switch: "on": true in data/banter.json.
+  // Switched off or broken, the ticker just shows the scores and the fun facts. It loads alongside
+  // the week files; if it can't be loaded this time, the copy already loaded stays.
+  const banter = getData("data/banter.json").then(banterIfOn, () => state?.banter ?? null);
   const weekFiles = await Promise.all(index.map((w) => keptRecorded(w, state) ?? getData(weekPath(w))));
-  return { league, baseline, weekFiles };
+  return { league, baseline, weekFiles, banter: await banter };
 }
 
 async function espnFetch(url) {
@@ -139,7 +144,8 @@ function render(dataProblem) {
 }
 
 // ---------- Live score ticker ----------
-// (js/banter.js, the league commentary, is kept for later but not used yet.)
+// Between the scores: the fun facts taking turns with the league commentary (js/banter.js: lines
+// written from the live scores of the week being played, and the hand-written data/banter.json).
 
 // The ticker shows the NFL week being played, whichever week the viewer is looking at below:
 // ESPN's current week (even before its tables are on the site), or the site's week when that one
@@ -147,14 +153,32 @@ function render(dataProblem) {
 // fact after every few games. It is only up while a game is being played.
 let tickerList = [];
 
+// The comments between the scores (fun facts taking turns with the commentary) are fixed for a
+// whole pass through the games, so the line on screen never turns into another one halfway
+// through: only the scores update in place. A new pass, a change to the commentary file (switched
+// off) or the bar or tab coming back picks up new facts and live lines.
+let keptComments = null;
+function comments(scoreboard) {
+  keptComments = passComments(keptComments, { pass: tickerPass, banter: state.banter }, () => {
+    let banter = [];
+    try {
+      banter = tickerCommentary({ weeks: model.weeks, weekFiles: state.weekFiles, scoreboard, standings: model.standings, league: state.league, banter: state.banter });
+    } catch {
+      // a commentary problem never stops the scores
+    }
+    return mixComments(seasonInsights().facts, banter);
+  });
+  return keptComments.list;
+}
+
 function buildTicker() {
   // the week being played (js/view.js picks it); the ticker is only up while a game is being played
   const scoreboard = model.tickerScoreboard;
   if (!hasLiveGame(scoreboard)) return [];
   const games = scoreItems(scoreboard, kickoff);
   const every = 3;
-  // each pass through the games shows the next facts along
-  return tickerItems({ games, comments: seasonInsights().facts, every, turn: tickerPass * Math.floor(games.length / every) });
+  // each pass through the games shows the next comments along
+  return tickerItems({ games, comments: comments(scoreboard), every, turn: tickerPass * Math.floor(games.length / every) });
 }
 
 // The rule that keeps the ticker moving: whenever the bar is up, a tick is pending. The pending
@@ -168,6 +192,7 @@ function showQuip() {
     stopTick();
     quipTurn = 0; // when it comes back (the next game), start with the live games
     shownTurn = null;
+    keptComments = null; // and with fresh comments
     return;
   }
   el.hidden = false;
@@ -183,8 +208,9 @@ function showQuip() {
       run.textContent = item.text;
       scrollRun(item);
       // A new item gets its own full time on screen. The same item with a new score or clock
-      // (a refresh) keeps the time it already had.
-      if (moved || tickTimer === null) scheduleTick();
+      // (a refresh) keeps the time it already had; a comment whose words changed (rare: the
+      // number of games changed mid-pass) gets the time its new words need.
+      if (moved || tickTimer === null || item.comment) scheduleTick();
     } else if (tickTimer === null) {
       scheduleTick(); // same words, but nothing pending (the bar just came back): start again
     }
@@ -411,6 +437,7 @@ for (const id of Object.keys(sorts)) {
 }
 // A hidden tab stops polling; when it comes back, catch up straight away if it has been a while.
 document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) keptComments = null; // back from a while away: no live lines with old scores
   if (document.hidden) clearTimeout(timer);
   else if (Date.now() - lastLoadAt > RETRY_MS) load();
   else schedule();

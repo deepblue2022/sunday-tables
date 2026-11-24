@@ -12,10 +12,13 @@ const pick = (variants, seed) => variants[Math.abs(seed) % variants.length];
 const hash = (s) => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
 
 const PLAYED = ["live", "final"];
+// a list of lines from data/banter.json, ignoring anything that isn't one
+const listOf = (v) => (Array.isArray(v) ? v.filter((l) => typeof l === "string" && l.trim()) : []);
 const isZero = (c) => (c.state === "final" && c.points === 0) || c.state === "dnp";
 
 // Lines about the week on screen. `result` is scoreWeek's output, `standings` the standings
-// model (or null), `extra.onLast` maps an owner to lines used when that owner is last in the standings.
+// model (or null), `extra.onLast` / `extra.onFirst` map an owner to lines used when that owner is last /
+// first in the standings (the lunch jokes: last place buys, the winner picks the restaurant).
 export function liveBanter({ result, standings = null, league, weekFile, extra = {} }) {
   if (!result) return [];
   const owners = league.owners;
@@ -223,7 +226,7 @@ export function liveBanter({ result, standings = null, league, weekFile, extra =
   if (order) {
     const last = order[0];
     const first = order[order.length - 1];
-    const lastLine = extra.onLast?.[last.key];
+    const lastLine = listOf(extra.onLast?.[last.key]);
     add(`last|${last.key}`, [
       `${last.display} is last in the live standings at ${fmtMoney(standings.totals[last.key])}.${lastLine?.length ? ` ${pick(lastLine, hash(last.key + result.team.rows[last.key].total))}` : ""}`,
     ]);
@@ -232,6 +235,9 @@ export function liveBanter({ result, standings = null, league, weekFile, extra =
       `${first.display} is top of the live standings at ${fmtMoney(standings.totals[first.key])}. Insufferable, and correct.`,
       `${first.display} sits on top of the season at ${fmtMoney(standings.totals[first.key])}. Please clap.`,
     ]);
+    // the season's winner picks the lunch restaurant (data/banter.json "on_first")
+    const firstLine = listOf(extra.onFirst?.[first.key]);
+    if (firstLine.length) add(`lunch|${first.key}`, firstLine);
     // places changing hands compared with the settled standings (before this week)
     if (standings.base) {
       const settled = [...owners].sort((a, b) => standings.base[a.key] - standings.base[b.key]);
@@ -258,11 +264,38 @@ export function liveBanter({ result, standings = null, league, weekFile, extra =
   return [...new Set(lines)];
 }
 
+// The commentary file only when its switch is on ("on": true); anything else means no commentary.
+export function banterIfOn(banter) {
+  return banter?.on === true ? banter : null;
+}
+
+// The ticker's commentary: [] unless the commentary is switched on (`banter` is null when it is
+// off, missing or broken). Live lines come from the site's week whose games are on the ticker
+// (matched by a shared game: the two scoreboards can be separate copies of the same week), taking
+// turns with the hand-written lines; with no such week, only the hand-written lines.
+export function tickerCommentary({ weeks, weekFiles, scoreboard, standings, league, banter }) {
+  if (!banter) return [];
+  const ids = new Set((scoreboard?.games ?? []).map((g) => g.id));
+  const week = weeks.find((w) => !w.recorded && w.result && w.scoreboard?.games?.some((g) => ids.has(g.id))) ?? null;
+  const weekFile = week ? weekFiles.find((f) => f.season === week.season && f.week === week.week) ?? null : null;
+  return banterPool({ week: weekFile ? week : null, result: weekFile ? week.result : null, standings, league, weekFile, banter }).map((l) => l.text);
+}
+
+// A reminder for the scorekeeper: the hand-written lines quote the season through
+// "through_week"; once a later week is recorded they are out of date. null when they are current
+// (or the commentary is off).
+export function banterStale(banter, latestRecorded) {
+  if (banter?.on !== true || !Number.isInteger(latestRecorded)) return null;
+  const through = banter.through_week;
+  if (Number.isInteger(through) && through >= latestRecorded) return null;
+  return `the ticker commentary (data/banter.json) is written through Week ${through ?? "?"}, but Week ${latestRecorded} is recorded: refresh its lines and "through_week", or switch it off ("on": false)`;
+}
+
 // The banner's pool for a week: live lines (while it is unrecorded) taking turns with the
 // hand-written batch, so tapping through alternates between the two. Each is {text, live}.
 export function banterPool({ week, result, standings, league, weekFile, banter }) {
-  const live = week && !week.recorded && result ? liveBanter({ result, standings, league, weekFile, extra: { onLast: banter?.on_last } }) : [];
-  const written = Array.isArray(banter?.lines) ? banter.lines.filter((l) => typeof l === "string" && l.trim()) : [];
+  const live = week && !week.recorded && result ? liveBanter({ result, standings, league, weekFile, extra: { onLast: banter?.on_last, onFirst: banter?.on_first } }) : [];
+  const written = listOf(banter?.lines);
   const out = [];
   for (let i = 0; i < Math.max(live.length, written.length); i++) {
     if (i < live.length) out.push({ text: live[i], live: true });

@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { scoreWeek, standings, derivePlayers, twoPtWarnings, pickOrder, pickOrderProblem, onEveryTeamTable, thanksgivingProblems } from "../js/scoring.js";
 import { loadLive, fetchRosters, fetchScoreboard, playedTeams, API } from "../js/espn.js";
+import { banterStale } from "../js/banter.js";
 import { resolveDraft, applyPlayedTeams, recordWeek, zeros, teamMismatches, formatWeek, gatherWeeks, assertWeekIdentity, parseArgs } from "./lib.mjs";
 
 const DATA = fileURLToPath(new URL("../data/", import.meta.url));
@@ -111,15 +112,21 @@ async function cmdWeek({ season, week, record }) {
   for (const t of twoPt) console.log(`\n2-PT CHECK: ${t}`);
   if (twoPt.length) console.log("Settle each one with a two_pt_fixes entry in the week file (see RULES.md).");
 
+  // the hand-written commentary's reminder: once, at the end (after recording, if recording)
+  const latest = Math.max(0, ...weeks.filter((w) => w.recorded).map((w) => w.week));
   if (weekFile.recorded) {
     if (record) throw new Error(`Week ${week} is already recorded. To re-record, delete "recorded" from its week file first.`);
+    await warnStaleBanter(latest);
     return;
   }
   const teams = await currentTeams();
   for (const m of teamMismatches(weekFile, teams)) {
     console.log(`\nWARNING: ${m.name} is ${m.team} in the week file but ESPN now lists ${m.current}`);
   }
-  if (!record) return;
+  if (!record) {
+    await warnStaleBanter(latest);
+    return;
+  }
 
   if (errors.length) throw new Error("Not recording: some games could not be loaded.");
   if (twoPt.length) throw new Error("Not recording: settle the 2-PT CHECK items above first.");
@@ -129,6 +136,14 @@ async function cmdWeek({ season, week, record }) {
   for (const z of zero) console.log(`  ${z.name} (${z.team}) ${z.state.toUpperCase()}`);
   await writeJson(weekPath(season, week), recorded);
   console.log(`\nRecorded week ${week} in data/weeks/${weekName(season, week)}`);
+  await warnStaleBanter(Math.max(latest, week));
+}
+
+// The hand-written ticker commentary quotes season numbers: say when a newer week is recorded.
+async function warnStaleBanter(latestRecorded) {
+  const banter = await readJson(path.join(DATA, "banter.json")).catch(() => null);
+  const stale = banterStale(banter, latestRecorded);
+  if (stale) console.log(`\nWARNING: ${stale}`);
 }
 
 const parsed = parseArgs(process.argv.slice(2));

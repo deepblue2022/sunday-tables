@@ -92,6 +92,13 @@ names someone not playing on Thanksgiving Day. The pool is never checked against
 allowed there); the main Team table keeps rule 3 that week too. `team_table.shared_ok: true` switches the
 rule 3 check off for a week: only for an exception the league agrees, never for Thanksgiving.
 
+**Ticker commentary:** the jokes between the scores come from `data/banter.json` (hand-written lines,
+plus lines the site writes from the live scores). It has its own switch: `"on": true` shows it, `"on": false`
+turns it off (the scores and fun facts carry on). The hand-written lines quote season numbers through
+`"through_week"`; once a later week is recorded, `npm run score` warns until they are refreshed (or switched off).
+`"notes_for_writers"` holds the league facts the lines are written from (lunch history and so on); the site
+doesn't show them.
+
 **Adding a past week** (before the starting totals in `data/baseline.json`): do steps 2-4, check the week's
 settlement against the old spreadsheet, subtract it from the baseline totals, set `through_week` one lower,
 then record the week. `resolve` uses the team each player played for that week, so traded players score correctly.

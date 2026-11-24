@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { scoreItems, seasonFacts, tickerItems, LEAD_INS } from "../js/ticker.js";
+import { scoreItems, seasonFacts, tickerItems, LEAD_INS, mixComments, passComments } from "../js/ticker.js";
 
 // a fact without its lead-in ("Fun fact:", "Did you know?" ...)
 const bare = (x) => LEAD_INS.reduce((t, l) => (t.startsWith(`${l} `) ? t.slice(l.length + 1) : t), x);
@@ -91,11 +91,20 @@ test("hasLiveGame: the banner only shows while an NFL game is being played", asy
   assert.equal(hasLiveGame(null), false);
 });
 
-test("the page does not use the banter yet (kept in js/banter.js for later), and the ticker has no close button", () => {
+test("the ticker carries the league commentary, and has no close button", () => {
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-  assert.doesNotMatch(app, /from "\.\/banter\.js"|data\/banter\.json|banterPool\(|liveBanter\(/);
+  // the commentary only through its switch, and through tickerCommentary (which returns nothing when off)
+  assert.match(app, /getData\("data\/banter\.json"\)\.then\(banterIfOn/);
+  assert.match(app, /tickerCommentary\(/);
+  assert.doesNotMatch(app, /banterPool\(|liveBanter\(/);
   assert.doesNotMatch(html, /quip-close/);
+});
+
+test("mixComments: facts and commentary take turns, the longer list carries on, repeats dropped", () => {
+  assert.deepEqual(mixComments(["f1", "f2", "f3"], ["b1"]), ["f1", "b1", "f2", "f3"]);
+  assert.deepEqual(mixComments(["f1"], ["b1", "b2", "f1"]), ["f1", "b1", "b2"]);
+  assert.deepEqual(mixComments([], []), []);
 });
 
 test("fun facts take the lead-ins in turn, and the same facts get the same lead-ins every time", () => {
@@ -244,4 +253,37 @@ test("two weeks open on the site and ESPN unreachable: the ticker picks the one 
     return { boxscore: { players: [] } };
   });
   assert.deepEqual(scoreItems(model.tickerScoreboard), [{ text: "BBB 17 – AAA 21 · 2:00 - 4th", live: true }]);
+});
+
+test("comments keep their places while the scores change: a refresh only updates the games", () => {
+  const games = (score) => ["A", "B", "C", "D", "E", "F"].map((t) => ({ text: `${t} ${score}`, live: true }));
+  const comments = ["fact one", "line one", "fact two"];
+  const before = tickerItems({ games: games(0), comments, turn: 2 });
+  const after = tickerItems({ games: games(7), comments, turn: 2 });
+  assert.deepEqual(after.map((i) => (i.comment ? i.text : "game")), before.map((i) => (i.comment ? i.text : "game")));
+});
+
+test("passComments: the comments are worked out once per pass, again for a new pass, a changed commentary file or after a reset", () => {
+  let n = 0;
+  const compute = () => [`list ${++n}`];
+  const on = { on: true };
+  let kept = passComments(null, { pass: 0, banter: on }, compute);
+  assert.deepEqual(kept.list, ["list 1"]);
+  // refreshes during the pass: the same list, not recomputed
+  assert.equal(passComments(kept, { pass: 0, banter: on }, compute), kept);
+  assert.equal(n, 1);
+  // the next pass
+  kept = passComments(kept, { pass: 1, banter: on }, compute);
+  assert.deepEqual(kept.list, ["list 2"]);
+  // the commentary switched off (a reload gives null): straight away, not at the end of the pass
+  kept = passComments(kept, { pass: 1, banter: null }, compute);
+  assert.deepEqual(kept.list, ["list 3"]);
+  // reset (the bar or the tab came back)
+  assert.deepEqual(passComments(null, { pass: 1, banter: null }, compute).list, ["list 4"]);
+});
+
+test("the page uses passComments, and starts fresh comments when the tab comes back", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /passComments\(keptComments, \{ pass: tickerPass, banter: state\.banter \}/);
+  assert.match(app, /visibilitychange[\s\S]{0,80}keptComments = null/);
 });

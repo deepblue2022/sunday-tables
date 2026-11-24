@@ -1,43 +1,98 @@
 {
- "batch": "2026-10b",
- "lore": [
-  "Vince finished last in each of the last three seasons."
+ "on": true,
+ "batch": "2026-11a",
+ "through_week": 11,
+ "notes_for_writers": [
+  "Last place buys the group lunch after the season. The winner picks the restaurant.",
+  "Vince has bought lunch three years in a row. Kevin and JD have never bought it.",
+  "Art is vegetarian; lunch is usually at a steakhouse.",
+  "Two seafood towers to start, every year, and bottles of Caymus."
  ],
  "on_last": {
   "Vince": [
-   "Four-peat watch: ACTIVE.",
-   "Right where the last three seasons left off.",
-   "Some traditions never die."
+   "Year four of the Caymus fund is on schedule.",
+   "The steakhouse already has Vince's card on file.",
+   "Four-peat watch: ACTIVE. Two seafood towers, as usual."
+  ],
+  "Kevin": [
+   "Kevin has never bought lunch. If you're going to start, start with two seafood towers and the Caymus.",
+   "Kevin's first lunch tab would be a big one. The Caymus is already breathing."
+  ],
+  "JD": [
+   "JD has never bought lunch. The steakhouse would like to meet JD's credit card.",
+   "JD's first lunch tab is loading: two seafood towers, then the Caymus list."
+  ],
+  "Art": [
+   "Art would be buying everyone steak, then ordering the side salad. With Caymus, at least.",
+   "Art paying for a steakhouse lunch and ordering the sides: peak irony."
+  ],
+  "Mxue": [
+   "The steakhouse has started chilling the seafood towers.",
+   "Two seafood towers and the Caymus, on Mxue's card. If it ends now."
+  ],
+  "Galli": [
+   "The steakhouse has started chilling the seafood towers.",
+   "Two seafood towers and the Caymus, on Galli's card. If it ends now."
+  ],
+  "JohnO": [
+   "The steakhouse has started chilling the seafood towers.",
+   "Two seafood towers and the Caymus, on JohnO's card. If it ends now."
+  ]
+ },
+ "on_first": {
+  "Art": [
+   "If it ends now, Art picks the restaurant. The steakhouse may finally be in danger."
+  ],
+  "JD": [
+   "If it ends now, JD picks the restaurant, and still won't have bought lunch. The streak lives.",
+   "If it ends now, JD picks the restaurant. Art is already reading the sides."
+  ],
+  "Vince": [
+   "If it ends now, Vince picks the restaurant and someone else finally pays. The Caymus is confused."
+  ],
+  "Kevin": [
+   "If it ends now, Kevin picks the restaurant. Art is already reading the sides."
+  ],
+  "Mxue": [
+   "If it ends now, Mxue picks the restaurant. Art is already reading the sides."
+  ],
+  "Galli": [
+   "If it ends now, Galli picks the restaurant. Art is already reading the sides."
+  ],
+  "JohnO": [
+   "If it ends now, JohnO picks the restaurant. Art is already reading the sides."
   ]
  },
  "lines": [
-  "Vince has finished last three seasons running and is −$726 so far this year. The four-peat is on schedule.",
-  "Vince isn't a league member. Vince is a recurring donor. Thank you for your continued support.",
-  "JD leads the season at +$500 with three Team pots, and that Week 5 Jefferson comes with an asterisk. Champions always have one.",
-  "Galli has won the Team pot three times and is still −$352. The Lightning table giveth nothing and taketh everything.",
-  "Kevin has had six Lightning picks score zero this season, the most in the league. Saquon's 0 in Week 4 was a team effort.",
-  "JohnO has been up in 7 of 9 weeks and leads the league with 14 Lightning column wins. Quietly the most annoying owner in the league.",
-  "Art started Lamar Jackson in Week 8 and got 0. Lamar got paid that week. Art did not.",
-  "Galli's Drake Maye scored 38 in Week 5, the best Lightning game of the season. Galli's week: +$116. Peak Galli.",
-  "Week 9, QB3: Love 36, Stroud 36. Kevin and JD split it, and everyone else paid for both.",
-  "Mxue went +$448 in Week 9, then turned in the exact same Team table as Art in Week 10. Plagiarism or genius? The pot will decide.",
-  "JohnO is +$588 in Lightning and −$180 in the Team table, with zero pots. Brilliant at the side bets, allergic to the main event.",
-  "Galli is +$170 in the Team table and −$522 in Lightning. Somebody please take Galli's Lightning picks away.",
-  "Vince has the season's two lowest Team tables: 43 in Week 6, then 52 in Week 7. Back to back. Commitment.",
-  "Vince won the Week 2 Team pot with 114, then gave most of it back in Lightning and finished the week +$64. Even Vince's best week needed a refund.",
+  "Vince has bought lunch three years running and finished Week 11 in last place again. The steakhouse has penciled in a four-peat.",
+  "Vince's lunch tab so far: three years, six seafood towers, and enough Caymus to count as a Napa investor.",
+  "Kevin and JD have never bought lunch. Every glass of Caymus they've ever had was on someone else.",
+  "Art is vegetarian. The league goes to a steakhouse most years anyway. Art's order: the sides, the bread and the Caymus list.",
+  "Most years, Art's vegetarian option at lunch is watching everyone else eat two seafood towers.",
+  "Two seafood towers isn't an appetizer. It's a message about who's paying.",
+  "Caymus pairs well with steak, shellfish and someone else's credit card.",
+  "Somewhere in Napa, the Caymus people check the Sunday Tables standings every Monday.",
+  "The winner picks the restaurant. History says it will be a steakhouse. Sorry, Art.",
+  "JD leads the season with four Team pots, and has never bought lunch. Some people are born lucky; JD was born with someone else's Caymus.",
+  "JD has been the week's biggest winner four times: Weeks 2, 6, 8 and 11. The restaurant reservation is practically in JD's name.",
+  "Galli has four Team pots (one shared), level with JD for the most, and is still −$584. The Lightning table has cost Galli $854. The Team table giveth; the Lightning table taketh, with interest.",
+  "Kevin and Galli have each had eight picks score nothing this season, the most in the league; for Galli, five of those didn't even play. Kevin's latest: Jalon Daniels in Week 11, for −$48.",
+  "JohnO is +$479 in Lightning and −$220 in the Team table. Brilliant at the side bets, allergic to the main event.",
+  "Mxue has gone up, down, up, down for all eleven weeks. Week 11 was up. Week 12 has been warned.",
+  "Week 10: Kenneth Walker III didn't play, and six of the seven Team tables had Walker. JD didn't, and JD won the pot.",
   "Week 2: Puka Nacua didn't play, and Art, Mxue, Galli and JohnO had all picked Puka. One DNP, four victims.",
-  "Galli has picked Bijan Robinson in all nine weeks. That's not a pick, that's a marriage.",
-  "Jahmyr Gibbs has been on Art's, Mxue's and Vince's rosters in eight of nine weeks. Original thinking is not this league's strength.",
-  "Kevin's Tony Pollard scored 32 in Week 7 and won $290 in a single column, the biggest one-column payday of the season.",
-  "Art's Tee Higgins scored 27 in Week 8 and took $266 off the rest of WR2. The rest of WR2 is still in recovery.",
-  "Kevin's Sam Darnold scored 0 in Week 1 and cost Kevin $68 in QB4. Season-opening tradition: done.",
-  "Through Week 9, Mxue alternated up, down, up, down, every single week. Not a fantasy player, a coin flip.",
-  "JohnO was up five weeks in a row (Weeks 4 to 8), the longest streak in the league. The Lightning picks should be drug tested.",
-  "JD has been the week's biggest winner three times: Weeks 2, 6 and 8. The rest of the league has started a support group.",
-  "Galli has been the week's biggest loser twice and has won three Team pots. Galli contains multitudes.",
-  "Vince was the week's biggest loser in Weeks 7 and 9. Consistency is a skill.",
-  "Kevin and JohnO have zero Team pots between them this season. The $140 pot doesn't know their names.",
-  "Week 9, QB3: every quarterback scored at least 17, except Galli's Malik Willis with 6. That cost Galli $60.",
-  "Kevin's Caleb Williams scored 37 in Week 1 and Kevin was the week's biggest winner. Then Week 3 happened, and Kevin was the biggest loser."
+  "Same Team table, three times: Art and Galli lost to Vince in Week 2, Mxue and Galli split the Week 7 pot, Art and Mxue lost to JD in Week 10. Copying homework works one time in three.",
+  "Jahmyr Gibbs has been on Art's Team table in ten of eleven weeks, and on Mxue's and Vince's in nine. Original thinking is not this league's strength.",
+  "Galli has picked Bijan Robinson in nine of eleven weeks. That's not a pick, that's a marriage.",
+  "Kevin has had Christian McCaffrey on the Team table in ten of eleven weeks, and Ja'Marr Chase in nine. Kevin doesn't pick a team, Kevin renews it.",
+  "Week 8: Art's Tee Higgins took $266 off the rest of WR2, and Art's Lamar Jackson scored 0. Art giveth, Art taketh away.",
+  "Drake Maye scored 3 for Vince in Week 10 and cost $62 in QB2. Galli had the same Drake Maye in Week 5 and couldn't stop scoring. Same quarterback, different owner, different universe.",
+  "Vince has the season's two lowest Team tables: 43 in Week 6, then 52 in Week 7. Back to back. Commitment.",
+  "Vince won the Week 2 Team pot with 114, then gave $56 back in Lightning and finished the week +$64. Even Vince's best week came with a refund.",
+  "Art was up in each of the first four weeks, then down in five of the next seven. The hot start is now −$50.",
+  "Kevin has been the week's biggest winner three times and the week's biggest loser three times. Kevin doesn't do quiet Sundays.",
+  "Galli has won four Team pots (one shared) and been the week's biggest loser three times. Galli contains multitudes.",
+  "Art and JohnO have tied for the top of a Lightning column three times. Great minds, identical points.",
+  "Vince has finished a week up only four times in eleven. Lunch for seven doesn't pay for itself."
  ]
 }

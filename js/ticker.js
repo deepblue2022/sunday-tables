@@ -172,3 +172,23 @@ export function tickerItems({ games, comments, every = 3, turn = 0 }) {
   });
   return out;
 }
+
+// The fun facts and the league commentary taking turns (fact, comment, fact, ...); whichever is
+// longer carries on alone at the end. Repeats are dropped.
+export function mixComments(facts, banter) {
+  const out = [];
+  for (let i = 0; i < Math.max(facts.length, banter.length); i++) {
+    if (i < facts.length) out.push(facts[i]);
+    if (i < banter.length) out.push(banter[i]);
+  }
+  return [...new Set(out)];
+}
+
+// The comments for a pass through the games, worked out once and kept for the whole pass (so the
+// line on screen never turns into another one halfway through). They are worked out again for a
+// new pass, when the commentary file changes (e.g. switched off), or after `fresh` is cleared
+// (the bar came back, or the tab did).
+export function passComments(kept, { pass, banter }, compute) {
+  if (kept && kept.pass === pass && kept.banter === banter) return kept;
+  return { pass, banter, list: compute() };
+}

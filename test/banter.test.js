@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { liveBanter, banterPool } from "../js/banter.js";
+import { liveBanter, banterPool, banterIfOn, tickerCommentary, banterStale } from "../js/banter.js";
 import { scoreWeek } from "../js/scoring.js";
 import { build, column, league, OWNERS } from "./helpers.js";
 
@@ -117,6 +117,14 @@ test("the week's money and the standings, with places changing hands", () => {
   about(l, "Vince", "Kevin"); // Vince out of last, Kevin in
 });
 
+test("the leader gets a restaurant line from on_first; nothing when the leader has none", () => {
+  const st = standings({ Vince: -60000, Mxue: 60000 }, { Vince: -72600, Mxue: 23000 });
+  const args = { team: { Art: [10, 10, 10, 10, 10] }, light: column(1, { Kevin: 30 }), st };
+  const l = run({ ...args, extra: { onFirst: { Mxue: ["Mxue picks the restaurant."] } } });
+  assert.ok(l.includes("Mxue picks the restaurant."));
+  assert.ok(!run({ ...args, extra: { onFirst: { Art: ["Art picks."] } } }).includes("Art picks."));
+});
+
 test("piling-up situations are capped: at most 6 zero lines and 1 all-zero column line", () => {
   // everything finished on 0: every box is a zero, every column is level on 0
   const l = run({});
@@ -163,8 +171,70 @@ test("the real banter file is well formed", () => {
   assert.ok(Array.isArray(b.lines) && b.lines.length >= 20);
   assert.ok(b.lines.every((l) => typeof l === "string" && l.length <= 200));
   assert.equal(new Set(b.lines).size, b.lines.length);
-  for (const [owner, quips] of Object.entries(b.on_last ?? {})) {
-    assert.ok(league.owners.some((o) => o.key === owner), owner);
-    assert.ok(quips.every((q) => typeof q === "string"));
+  for (const map of [b.on_last, b.on_first]) {
+    for (const [owner, quips] of Object.entries(map ?? {})) {
+      assert.ok(league.owners.some((o) => o.key === owner), owner);
+      assert.ok(quips.every((q) => typeof q === "string" && q.length <= 200));
+    }
   }
+  // the season ends with lunch, never dinner
+  assert.doesNotMatch(JSON.stringify(b), /dinner/i);
+});
+
+test("the commentary has its own switch: only \"on\": true turns it on", () => {
+  const b = { on: true, lines: ["x"] };
+  assert.equal(banterIfOn(b), b);
+  for (const off of [{ on: false, lines: ["x"] }, { lines: ["x"] }, { on: "yes", lines: ["x"] }, null, undefined]) assert.equal(banterIfOn(off), null);
+  const real = JSON.parse(readFileSync(new URL("../data/banter.json", import.meta.url), "utf8"));
+  assert.equal(typeof real.on, "boolean", 'data/banter.json needs "on": true or false');
+});
+
+test("tickerCommentary: nothing at all when switched off; written lines only without a matching live week; live lines with one", () => {
+  const { weekFile, playersById } = build({}, column(2, { Kevin: 30 }), onlyColumn(2));
+  weekFile.season = 2026;
+  weekFile.week = 12;
+  const result = scoreWeek(weekFile, playersById, league);
+  const sb = { games: [{ id: "g1", phase: "in" }, { id: "g2", phase: "pre" }] };
+  const live = { season: 2026, week: 12, recorded: false, result, scoreboard: { games: [{ id: "g2" }] } }; // a separate copy, sharing g2
+  const banter = { on: true, lines: ["written one"] };
+  const args = { weeks: [live], weekFiles: [weekFile], scoreboard: sb, standings: null, league };
+  // off (null after banterIfOn): no live lines either
+  assert.deepEqual(tickerCommentary({ ...args, banter: null }), []);
+  assert.deepEqual(tickerCommentary({ ...args, banter: banterIfOn({ ...banter, on: false }) }), []);
+  // on, matching week: live lines taking turns with the written one
+  const on = tickerCommentary({ ...args, banter });
+  assert.ok(on.length > 1 && on.includes("written one"));
+  // on, but the ticker shows another week (no shared game) or the week is recorded: written only
+  assert.deepEqual(tickerCommentary({ ...args, banter, scoreboard: { games: [{ id: "zz", phase: "in" }] } }), ["written one"]);
+  assert.deepEqual(tickerCommentary({ ...args, banter, weeks: [{ ...live, recorded: true }] }), ["written one"]);
+});
+
+test("on_last / on_first must be lists: a single string is ignored, not cut to one character", () => {
+  const st = standings({ Vince: -60000, Mxue: 60000 });
+  const l = run({ team: { Art: [10, 10, 10, 10, 10] }, light: column(1, { Kevin: 30 }), st, extra: { onLast: { Vince: "oops" }, onFirst: { Mxue: "oops" } } });
+  assert.ok(!l.some((x) => /\. o$|^o$|oops/.test(x)), l.join("\n"));
+  about(l, "Vince is last in the live standings at −$600.");
+});
+
+test("banterStale: a reminder once a week after through_week is recorded; quiet when current or switched off", () => {
+  assert.equal(banterStale({ on: true, through_week: 11 }, 11), null);
+  assert.match(banterStale({ on: true, through_week: 11 }, 12), /through Week 11, but Week 12 is recorded/);
+  assert.match(banterStale({ on: true }, 12), /through Week \?/);
+  assert.equal(banterStale({ on: false, through_week: 3 }, 12), null);
+  assert.equal(banterStale(null, 12), null);
+  assert.equal(banterStale({ on: true, through_week: 12 }, 11), null); // written ahead of the latest record
+  const real = JSON.parse(readFileSync(new URL("../data/banter.json", import.meta.url), "utf8"));
+  assert.ok(Number.isInteger(real.through_week), 'data/banter.json needs "through_week"');
+});
+
+test("the command line warns about stale commentary at most once, at the end", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const index = JSON.parse(readFileSync(new URL("../data/weeks/index.json", import.meta.url), "utf8"));
+  const recorded = index.filter((w) => JSON.parse(readFileSync(new URL(`../data/weeks/${w.season}-${String(w.week).padStart(2, "0")}.json`, import.meta.url), "utf8")).recorded);
+  const last = recorded.at(-1);
+  // a recorded week needs no network
+  const out = execFileSync(process.execPath, [new URL("../cli/score.mjs", import.meta.url).pathname, String(last.season), String(last.week)], { encoding: "utf8" });
+  const warnings = out.match(/ticker commentary \(data\/banter\.json\)/g) ?? [];
+  assert.ok(warnings.length <= 1, out);
+  if (warnings.length) assert.match(out.trimEnd().split("\n").at(-1), /ticker commentary/, "the reminder comes last");
 });

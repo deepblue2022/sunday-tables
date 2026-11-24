@@ -8,6 +8,7 @@ import { parseGame } from "../js/espn.js";
 import { renderThanksgiving, renderSettlement, renderCard } from "../js/render.js";
 import { resolveDraft, recordWeek, applyPlayedTeams, formatWeek } from "../cli/lib.mjs";
 import { build, league, OWNERS } from "./helpers.js";
+import { liveBanter } from "../js/banter.js";
 
 const TEAMS = ["CHI", "DET", "PHI", "DAL", "KC", "BUF"];
 const COLS = ["QB", "RB", "RB", "WR", "WR", "K"];
@@ -223,4 +224,17 @@ test("a week counts as started when only the Thanksgiving pool's games are on", 
   assert.equal(model.weeks[0].result.team.started, false);
   assert.equal(model.weeks[0].result.thanksgiving.started, true);
   assert.equal(model.weeks[0].started, true);
+});
+
+
+test("the live commentary copes with a Thanksgiving week", () => {
+  const { weekFile, playersById } = week({ pts: { Art: [20, 10, 10, 10, 10] }, kick: { Art: { fgMade: 1 } } });
+  const r = scoreWeek(weekFile, playersById, league);
+  const totals = Object.fromEntries(OWNERS.map((o, i) => [o, i * 100]));
+  // before the week: the order reversed, so first and last both change hands
+  const base = Object.fromEntries(OWNERS.map((o, i) => [o, -i * 100]));
+  const lines = liveBanter({ result: r, standings: { totals, base }, league, weekFile, extra: { onFirst: { [OWNERS.at(-1)]: ["picks the restaurant"] } } });
+  assert.ok(Array.isArray(lines) && lines.every((l) => typeof l === "string"));
+  assert.ok(lines.includes("picks the restaurant"));
+  assert.ok(lines.some((l) => l.includes(OWNERS.at(-1)) && l.includes(OWNERS[0]) && /first|top/.test(l)), lines.join("\n"));
 });

@@ -23,10 +23,11 @@ export function keptRecorded(entry, previous) {
 
 // `previous` is the state being replaced after the data files were re-read: finished-game
 // summaries and the last good live results carry over.
-export function newState({ league, baseline, weekFiles }, previous = null) {
+export function newState({ league, baseline, weekFiles, banter = null }, previous = null) {
   return {
     league,
     baseline,
+    banter, // data/banter.json, the league commentary for the ticker (or null)
     weekFiles: [...weekFiles].sort((a, b) => a.season - b.season || a.week - b.week),
     caches: previous?.caches ?? new Map(), // week key -> Map of finished game summaries
     last: previous?.last ?? new Map(), // week key -> {result, errors, at} from the last successful live load
