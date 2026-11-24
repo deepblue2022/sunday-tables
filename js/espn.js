@@ -39,6 +39,8 @@ const STAT_KEYS = {
   passing: { "completions/passingAttempts": ["passCmp", "passAtt"], passingYards: "passYds", passingTouchdowns: "passTD" },
   rushing: { rushingAttempts: "rushAtt", rushingYards: "rushYds", rushingTouchdowns: "rushTD" },
   receiving: { receptions: "rec", receivingYards: "recYds", receivingTouchdowns: "recTD" },
+  // kickers: only for the Thanksgiving Day pool's tiebreak (RULES.md rule 6)
+  kicking: { "fieldGoalsMade/fieldGoalAttempts": ["fgMade", "fgAtt"], "extraPointsMade/extraPointAttempts": ["xpMade", "xpAtt"] },
 };
 const toNumber = (v) => {
   const n = Number(v);

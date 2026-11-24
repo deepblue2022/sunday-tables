@@ -29,6 +29,9 @@ The scorekeeper pastes two tables per week: the Team table (QB/RB/RB/WR/WR) and 
    pasted, as `"pick_order": [...]` in `lightning_table`; the site shows the table in that order and marks
    each round's first pick with ◆. A pick order that doesn't list every owner once is ignored, with a
    warning at resolve and when showing the week. Fix it; it never stops the week from scoring.
+   **Thanksgiving week** has a third pasted table, the Thanksgiving Day pool: add it to the draft as
+   `thanksgiving_table` with columns exactly `["QB", "RB", "RB", "WR", "WR", "K"]` (see RULES.md
+   "Thanksgiving week" in Scorekeeping and `test/thanksgiving.test.js`).
 3. **Resolve:** `npm run score -- resolve /tmp/weekN-draft.json --out data/weeks/<season>-<NN>.json`.
    Fix any reported names and re-run.
 4. **List** the week in `data/weeks/index.json` (keep it sorted).

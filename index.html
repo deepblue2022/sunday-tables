@@ -147,6 +147,7 @@ td.order { color: var(--muted); }
 }
 p .note { display: inline; margin-right: 6px; }
 .pot { margin: 8px 2px 0; font-weight: 600; }
+#thanksgiving-section[hidden] { display: none; }
 footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
 body.empty section, body.empty #week, body.noweek section.week, body.nosettlement #settlement-section { display: none; }
 </style>
@@ -171,6 +172,10 @@ body.empty section, body.empty #week, body.noweek section.week, body.nosettlemen
   <section class="week">
     <h2>Team table</h2>
     <div id="team"></div>
+  </section>
+  <section class="week" id="thanksgiving-section" hidden>
+    <h2>Thanksgiving Day pool</h2>
+    <div id="thanksgiving"></div>
   </section>
   <section class="week">
     <h2>Lightning table</h2>

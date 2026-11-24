@@ -34,7 +34,8 @@ export function newState({ league, baseline, weekFiles }, previous = null) {
   };
 }
 
-const startedAny = (result) => Boolean(result) && (result.team.started || result.lightning.columns.some((c) => c.started));
+const startedAny = (result) =>
+  Boolean(result) && (result.team.started || result.lightning.columns.some((c) => c.started) || Boolean(result.thanksgiving?.started));
 
 export async function refresh(state, fetchFn, now = new Date()) {
   const { league, baseline } = state;

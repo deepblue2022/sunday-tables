@@ -1,11 +1,13 @@
 // Pure helpers for the CLI: name resolution, recording, and plain-text output.
 import { fmtMoney, STATE_TAG, showsDash } from "../js/render.js";
-import { validateWeekFile, isPickOrder } from "../js/scoring.js";
+import { validateWeekFile, isPickOrder, THANKSGIVING } from "../js/scoring.js";
 
 const TABLES = ["team_table", "lightning_table"];
+const tablesOf = (weekFile) => (weekFile?.[THANKSGIVING] ? [...TABLES, THANKSGIVING] : TABLES);
 const OFFENCE = ["QB", "RB", "WR", "TE", "FB"];
+const KICKERS = ["K", "PK"]; // only for a "K" column (the Thanksgiving Day pool's tiebreak kicker)
 const SUFFIXES = ["Jr.", "Sr.", "II", "III", "IV"];
-const rostered = (weekFile) => TABLES.flatMap((t) => Object.values(weekFile[t].rosters).flat());
+const rostered = (weekFile) => tablesOf(weekFile).flatMap((t) => Object.values(weekFile[t].rosters).flat());
 const unique = (players) => [...new Map(players.map((p) => [p.id, p])).values()];
 
 const describe = (p) => `${p.name} (${p.team} ${p.pos})`;
@@ -36,10 +38,11 @@ function noMatch(want, pool, everyone) {
 // Never guesses: every entry that matches no player, or more than one, is reported in one error.
 // With a league, the resolved file is also validated (owners, roster sizes, season and week).
 export function resolveDraft(draft, rosterPlayers, league) {
-  const pool = rosterPlayers.filter((p) => OFFENCE.includes(p.pos));
+  const offence = rosterPlayers.filter((p) => OFFENCE.includes(p.pos));
+  const kickers = rosterPlayers.filter((p) => KICKERS.includes(p.pos));
   const problems = [];
   const out = { season: draft.season, week: draft.week };
-  for (const t of TABLES) {
+  for (const t of tablesOf(draft)) {
     if (!Array.isArray(draft[t]?.columns) || !draft[t].rosters) {
       problems.push(`${t} is missing`);
       continue;
@@ -53,6 +56,7 @@ export function resolveDraft(draft, rosterPlayers, league) {
           problems.push(`${where}: entry is not a name`);
           return null;
         }
+        const pool = draft[t].columns[i] === "K" ? kickers : offence;
         const hits = pool.filter((p) => p.name === want.name && (!want.team || p.team === want.team));
         if (hits.length === 1) return { name: hits[0].name, id: hits[0].id, team: hits[0].team };
         const found = hits.length
@@ -85,7 +89,12 @@ export function applyPlayedTeams(weekFile, played) {
   };
   const table = (t) => ({ ...t, rosters: Object.fromEntries(Object.entries(t.rosters).map(([o, r]) => [o, r.map(fix)])) });
   return {
-    weekFile: { ...weekFile, team_table: table(weekFile.team_table), lightning_table: table(weekFile.lightning_table) },
+    weekFile: {
+      ...weekFile,
+      team_table: table(weekFile.team_table),
+      lightning_table: table(weekFile.lightning_table),
+      ...(weekFile[THANKSGIVING] ? { [THANKSGIVING]: table(weekFile[THANKSGIVING]) } : {}),
+    },
     changes,
   };
 }
@@ -167,9 +176,23 @@ export function formatWeek(result, standings, league, pickOrder = null) {
   lines.push("", drafted === owners ? "$ by column" : "$ by column (pick order)", lightningHeader);
   for (const col of result.lightning.columns) lines.push(lightningRow(col.name, col.money));
 
+  const tg = result.thanksgiving;
+  if (tg) {
+    lines.push("", `== Thanksgiving Day pool${flag(tg.provisional)} ==`);
+    for (const o of owners) {
+      const row = tg.rows[o.key];
+      lines.push(`${pad(o.display, 8)}${row.players.map((c) => pad(cellText(c), 20)).join("")}TOTAL ${row.total} (K ${row.tiebreak})`);
+    }
+    const names = tg.winners.map((k) => owners.find((o) => o.key === k).display).join(" & ");
+    const kicker = tg.tiedOnTotal && tg.winners.length === 1 ? " (kicker tiebreak)" : tg.tiedOnTotal ? " (kickers tied too: split)" : "";
+    lines.push(!tg.started ? "Pot: not started" : tg.winners.length === owners.length ? "Pot: all level, returned" : `Pot: ${names}${kicker}`);
+  }
+
   lines.push("", `== Settlement${flag(!result.final)} ==`, header);
   const part = (k) => Object.fromEntries(owners.map((o) => [o.key, result.settlement[o.key][k]]));
-  lines.push(moneyRow("Lightning", part("lightning")), moneyRow("Team pot", part("teamPot")), moneyRow("Week", part("total")));
+  lines.push(moneyRow("Lightning", part("lightning")), moneyRow("Team pot", part("teamPot")));
+  if (tg) lines.push(moneyRow("Thanksgiving pot", part("thanksgiving")));
+  lines.push(moneyRow("Week", part("total")));
 
   lines.push("", "== Standings ==", header, moneyRow(`Thru Wk ${standings.recordedThrough}`, standings.base));
   for (const w of standings.open) {

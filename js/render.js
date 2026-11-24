@@ -1,5 +1,5 @@
 // Presentation helpers: pure string builders, no DOM. Shared by the page and the CLI.
-import { pointsBreakdown, statsPoints, isPickOrder } from "./scoring.js";
+import { pointsBreakdown, statsPoints, isPickOrder, kickPoints } from "./scoring.js";
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
@@ -71,6 +71,35 @@ export function renderTeamTable(result, league, columns, fmtKickoff = null) {
   return `${wrap(table, team.provisional)}<p class="pot">${esc(line)}</p>`;
 }
 
+// The Thanksgiving Day pool (RULES.md rule 6): QB, RB, RB, WR, WR and a kicker. The total leaves
+// the kicker out; the kicker's points (shown in that box) only break a tie on the total.
+export function renderThanksgiving(result, league, columns, fmtKickoff = null) {
+  const tg = result.thanksgiving;
+  if (!tg) return "";
+  const kick = columns.indexOf("K");
+  const win = highlighted(tg.winners, league);
+  const head = `<tr><th>Team</th>${columns.map((c) => `<th>${c === "K" ? `K${note("tiebreak")}` : esc(c)}</th>`).join("")}<th>Total</th></tr>`;
+  const rows = league.owners
+    .map((o) => {
+      const row = tg.rows[o.key];
+      const cells = row.players
+        .map((c, i) => playerCell(i === kick ? { ...c, points: row.tiebreak } : c, false, `g|${o.key}|${i}`, fmtKickoff))
+        .join("");
+      return `<tr${win.includes(o.key) ? ' class="win"' : ""}>\n${rowHead(o)}${cells}<td class="total">${esc(row.total)}</td></tr>`;
+    })
+    .join("\n");
+  const pot = `$${(league.teamBuyInCents * league.owners.length) / 100}`;
+  // the kicker decided it only when it separated a tie on the total
+  const byKicker = tg.tiedOnTotal && tg.winners.length === 1 ? " on the kicker tiebreak" : tg.tiedOnTotal ? " (kickers tied too)" : "";
+  let line;
+  if (!tg.started) line = `Not started. Pot: ${pot}`;
+  else if (!win.length) line = tg.provisional ? "provisional: all level" : `All level: ${pot} pot returned`;
+  else if (tg.provisional) line = `provisional: ${names(win, league)} ${win.length > 1 ? "tied" : "leads"}${byKicker}`;
+  else line = `${names(win, league)} ${win.length > 1 ? "split" : "wins"} ${pot}${byKicker}`;
+  const table = `<table class="team thanksgiving"><thead>${head}</thead><tbody>\n${rows}\n</tbody></table>`;
+  return `${wrap(table, tg.provisional)}<p class="pot">${esc(line)}</p>`;
+}
+
 // `pickOrder` (the week's lightning_table.pick_order): owners in draft order. Rows follow it, as
 // in the pasted table, and round i's first pick (made by pickOrder[i]) is marked ◆, with a key.
 // Without it, rows are in league order and nothing is marked.
@@ -128,8 +157,14 @@ export function statRows(stats) {
     rows.push({ label: "Rec", line: `${s.rec ?? 0} rec, ${yds(s.recYds ?? 0)}${td(s.recTD)}`, points: pts(b.rec.yards, b.rec.td) });
   }
   if (b.twoPt) rows.push({ label: "2-pt", line: "conversion", points: String(b.twoPt) });
+  if (s.fgAtt || s.xpAtt) {
+    // a kicker (Thanksgiving Day pool tiebreak): 3 per field goal, 1 per extra point
+    rows.push({ label: "Kick", line: `${s.fgMade ?? 0}/${s.fgAtt ?? 0} FG, ${s.xpMade ?? 0}/${s.xpAtt ?? 0} XP`, points: pts(3 * (s.fgMade ?? 0), s.xpMade ?? 0) });
+  }
   return rows;
 }
+// A kicker's stat line has kicking and nothing else.
+const isKicker = (stats) => Boolean(stats && (stats.fgAtt || stats.xpAtt) && !stats.passAtt && !stats.rushAtt && !stats.rec);
 
 const STATE_LABEL = { live: "LIVE", final: "Final", dnp: "Did not play", bye: "Bye week", not_started: "Not started", unknown: "Not settled" };
 
@@ -190,6 +225,8 @@ export function renderCard(cell, context = "", fmtKickoff = null, loaded = true)
       `<p class="card-note"><strong>* Settled at ${esc(cell.points)}</strong>, the official score.` +
       (cell.override.reason ? ` ${esc(cell.override.reason)}` : "") +
       `</p>`;
+  } else if (isKicker(cell.stats)) {
+    foot = `<div class="card-total"><span>Tiebreak${cell.state === "live" ? " so far" : ""}</span><strong>${esc(kickPoints(cell.stats))}</strong></div>`;
   } else if (!showsDash(cell.state) && cell.state !== "bye") {
     foot = `<div class="card-total"><span>${cell.state === "live" ? "So far" : "Total"}</span><strong>${esc(cell.points)}</strong></div>`;
   }
@@ -236,10 +273,17 @@ export function renderSettlement(result, league, sort = null) {
   const rows = sortedOwners(league, sort, value)
     .map((o) => {
       const s = result.settlement[o.key];
-      return `<tr>${rowHead(o)}${moneyCell(s.lightning)}${moneyCell(s.teamPot)}${moneyCell(s.total, "net ")}</tr>`;
+      const tg = result.thanksgiving ? moneyCell(s.thanksgiving) : "";
+      return `<tr>${rowHead(o)}${moneyCell(s.lightning)}${moneyCell(s.teamPot)}${tg}${moneyCell(s.total, "net ")}</tr>`;
     })
     .join("\n");
-  const cols = [["team", "Team"], ["lightning", "Lightning"], ["teamPot", "Team pot"], ["total", "Week"]];
+  const cols = [
+    ["team", "Team"],
+    ["lightning", "Lightning"],
+    ["teamPot", "Team pot"],
+    ...(result.thanksgiving ? [["thanksgiving", "Turkey"]] : []), // the Thanksgiving Day pool (short: fits a phone)
+    ["total", "Week"],
+  ];
   const head = `<tr>${cols.map(([key, label]) => sortHead(key, label, sort)).join("")}</tr>`;
   const label = result.final ? "" : `<p class="pot">${note("provisional")} games still to finish</p>`;
   return `${wrap(`<table class="grid"><thead>${head}</thead><tbody>\n${rows}\n</tbody></table>`, !result.final)}${label}`;

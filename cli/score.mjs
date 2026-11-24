@@ -8,7 +8,7 @@
 import { readFile, writeFile, rename } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { scoreWeek, standings, derivePlayers, twoPtWarnings, pickOrder, pickOrderProblem } from "../js/scoring.js";
+import { scoreWeek, standings, derivePlayers, twoPtWarnings, pickOrder, pickOrderProblem, onEveryTeamTable, thanksgivingProblems } from "../js/scoring.js";
 import { loadLive, fetchRosters, fetchScoreboard, playedTeams, API } from "../js/espn.js";
 import { resolveDraft, applyPlayedTeams, recordWeek, zeros, teamMismatches, formatWeek, gatherWeeks, assertWeekIdentity, parseArgs } from "./lib.mjs";
 
@@ -64,6 +64,8 @@ async function cmdResolve({ draft: draftArg, out }) {
   const { weekFile, changes } = applyPlayedTeams(resolved, played);
   const orderProblem = pickOrderProblem(weekFile, league);
   if (orderProblem) console.error(`WARNING: ${orderProblem}`);
+  for (const name of onEveryTeamTable(weekFile, league)) console.error(`WARNING: ${name} is on all ${league.owners.length} Team tables (RULES.md rule 3: everyone re-picks)`);
+  for (const p of thanksgivingProblems(weekFile, league, scoreboard)) console.error(`WARNING: ${p} (RULES.md rule 6)`);
   for (const c of changes) console.error(`Note: ${c.name} is on ${c.from} now but played this week for ${c.to}; using ${c.to}.`);
   if (out) {
     await writeJson(path.resolve(process.cwd(), out), weekFile);
@@ -92,7 +94,7 @@ async function cmdWeek({ season, week, record }) {
     const live = await loadLive(weekFile, fetchFn);
     const players = derivePlayers(weekFile, live.scoreboard, live.gamesById);
     const twoPt = twoPtWarnings(weekFile, live.scoreboard, live.gamesById);
-    return { weekFile, players, result: scoreWeek(weekFile, players, league), errors: live.errors, twoPt };
+    return { weekFile, players, result: scoreWeek(weekFile, players, league), errors: live.errors, twoPt, scoreboard: live.scoreboard };
   };
   const { weeks, selected, warnings } = await gatherWeeks(index.filter((w) => w.season === season), week, load);
   const { weekFile, players, result, errors, twoPt = [] } = selected;
@@ -102,6 +104,8 @@ async function cmdWeek({ season, week, record }) {
   console.log(formatWeek(result, standings(baseline, weeks, league), league, pickOrder(weekFile, league)));
   const orderProblem = pickOrderProblem(weekFile, league);
   if (orderProblem) console.log(`\nWARNING: ${orderProblem}`);
+  for (const name of onEveryTeamTable(weekFile, league)) console.log(`\nWARNING: ${name} is on all ${league.owners.length} Team tables (RULES.md rule 3: everyone re-picks)`);
+  for (const p of thanksgivingProblems(weekFile, league, selected.scoreboard ?? null)) console.log(`\nWARNING: ${p} (RULES.md rule 6)`);
   for (const w of warnings) console.log(`\nWARNING: ${w}`);
   for (const e of errors) console.log(`\nWARNING: could not load ${e}`);
   for (const t of twoPt) console.log(`\n2-PT CHECK: ${t}`);

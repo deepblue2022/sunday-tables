@@ -1,6 +1,6 @@
 // Browser glue: load the data files, build the model (js/view.js), render it, and keep it fresh.
 import { newState, refresh, statusLine, bannerLines, checkIndex, keptRecorded } from "./view.js";
-import { renderTeamTable, renderLightning, renderSettlement, renderStandings, renderCard, nextSort, esc } from "./render.js";
+import { renderTeamTable, renderThanksgiving, renderLightning, renderSettlement, renderStandings, renderCard, nextSort, esc } from "./render.js";
 import { scoreItems, seasonFacts, tickerItems, hasLiveGame, itemTime } from "./ticker.js";
 import { analyticsFacts } from "./analytics.js";
 import { pickOrder } from "./scoring.js";
@@ -119,6 +119,10 @@ function render(dataProblem) {
   const weekFile = week && state.weekFiles.find((f) => f.season === week.season && f.week === week.week);
   shown = result ? { result, weekFile, loaded: Boolean(week.result) } : null;
   setHtml("team", result ? renderTeamTable(result, league, weekFile.team_table.columns, kickoff) : "");
+  // the Thanksgiving Day pool, only in the week that has one
+  const tgTable = weekFile?.thanksgiving_table;
+  $("thanksgiving-section").hidden = !(result && tgTable);
+  setHtml("thanksgiving", result && tgTable ? renderThanksgiving(result, league, tgTable.columns, kickoff) : "");
   setHtml("lightning", result ? renderLightning(result, league, kickoff, pickOrder(weekFile, league)) : "");
   // No settlement to show until some real scores have loaded.
   setHtml("settlement", week?.result ? renderSettlement(week.result, league, sorts.settlement) : "");
@@ -272,6 +276,10 @@ function cardCell(key) {
     const cell = shown.result.team.rows[a]?.players[Number(b)];
     return cell ? { cell, context: `${owner(a)} · ${shown.weekFile.team_table.columns[Number(b)]}` } : null;
   }
+  if (table === "g") {
+    const cell = shown.result.thanksgiving?.rows[a]?.players[Number(b)];
+    return cell ? { cell, context: `${owner(a)} · Thanksgiving ${shown.weekFile.thanksgiving_table.columns[Number(b)]}` } : null;
+  }
   const col = shown.result.lightning.columns[Number(a)];
   const cell = col?.cells[b];
   return cell ? { cell, context: `${owner(b)} · ${col.name}` } : null;
@@ -289,7 +297,7 @@ function showCard(key) {
   if (!dialog.open) dialog.showModal();
 }
 
-for (const id of ["team", "lightning"]) {
+for (const id of ["team", "thanksgiving", "lightning"]) {
   $(id).addEventListener("click", (e) => {
     const key = e.target.closest?.("button[data-card]")?.dataset.card;
     if (key) showCard(key);

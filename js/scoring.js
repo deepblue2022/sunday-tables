@@ -28,6 +28,13 @@ export function playerPoints(statLine, twoPt = 0) {
   return b.pass.yards + b.pass.td + b.rush.yards + b.rush.td + b.rec.yards + b.rec.td + b.twoPt;
 }
 
+// A kicker's tiebreak points (Thanksgiving Day pool, RULES.md rule 6): 1 per extra point made,
+// 3 per field goal made, any distance; misses score nothing.
+export function kickPoints(statLine) {
+  const s = statLine || {};
+  return num(s.xpMade) + 3 * num(s.fgMade);
+}
+
 // Points by the rules for a saved stat line ({...line, twoPt}).
 export const statsPoints = (stats) => playerPoints(stats, stats?.twoPt ?? 0);
 
@@ -45,6 +52,9 @@ export function splitCents(totalCents, winners, ownerOrder) {
 }
 
 const TABLES = ["team_table", "lightning_table"];
+// The Thanksgiving Day pool (RULES.md rule 6) is a third table, present only that week.
+export const THANKSGIVING = "thanksgiving_table";
+const tablesOf = (weekFile) => (weekFile?.[THANKSGIVING] ? [...TABLES, THANKSGIVING] : TABLES);
 const isText = (v) => typeof v === "string" && v !== "";
 const weekLabel = (weekFile) => `${weekFile?.season}-${weekFile?.week}`;
 
@@ -54,7 +64,7 @@ export function validateWeekFile(weekFile, league) {
   if (!Number.isInteger(weekFile?.season) || !Number.isInteger(weekFile?.week)) {
     problems.push("needs an integer season and week");
   }
-  for (const t of TABLES) {
+  for (const t of tablesOf(weekFile)) {
     const table = weekFile?.[t];
     if (!Array.isArray(table?.columns) || !table.rosters) {
       problems.push(`${t} is missing`);
@@ -78,9 +88,14 @@ export function validateWeekFile(weekFile, league) {
       }
     }
   }
+  // The Thanksgiving Day pool's kicker column is named exactly "K" (the tiebreak), once.
+  const tgCols = weekFile?.[THANKSGIVING]?.columns;
+  if (Array.isArray(tgCols) && tgCols.filter((c) => c === "K").length !== 1) {
+    problems.push(`${THANKSGIVING} needs exactly one "K" column (the tiebreak kicker)`);
+  }
   // One athlete id must mean one player on one team wherever it appears.
   const seen = new Map();
-  for (const t of TABLES) {
+  for (const t of tablesOf(weekFile)) {
     for (const p of Object.values(weekFile?.[t]?.rosters ?? {}).flat()) {
       if (!isText(p?.id)) continue;
       const first = seen.get(p.id) ?? seen.set(p.id, p).get(p.id);
@@ -175,11 +190,55 @@ export function scoreWeek(weekFile, playersById, league) {
     return { name, cells, winners: c.winners, started: c.started, provisional: c.provisional, money };
   });
 
+  // Thanksgiving Day pool (only that week): highest total of the non-kicker spots takes the pot;
+  // the kicker's points break a tie; still tied, the tied owners split it.
+  let thanksgiving = null;
+  const tg = weekFile[THANKSGIVING];
+  if (tg) {
+    const kick = tg.columns.indexOf("K");
+    const tgRows = {};
+    for (const o of owners) {
+      const players = tg.rosters[o].map(cell);
+      const total = players.reduce((a, c, i) => (i === kick ? a : a + c.points), 0);
+      tgRows[o] = { players, total, tiebreak: kick >= 0 ? kickPoints(players[kick].stats) : 0 };
+    }
+    const g = contest(
+      Object.fromEntries(owners.map((o) => [o, tgRows[o].total])),
+      Object.fromEntries(owners.map((o) => [o, tgRows[o].players])),
+      owners,
+    );
+    const bestTiebreak = Math.max(...g.winners.map((o) => tgRows[o].tiebreak));
+    const winners = g.winners.filter((o) => tgRows[o].tiebreak === bestTiebreak);
+    const money = zeroMoney(owners);
+    if (g.started) {
+      for (const o of owners) money[o] = -league.teamBuyInCents;
+      const shares = splitCents(league.teamBuyInCents * owners.length, winners, owners);
+      for (const o of winners) money[o] += shares[o];
+    }
+    thanksgiving = {
+      rows: tgRows,
+      winners,
+      tiedOnTotal: g.winners.length > 1, // the kicker tiebreak was needed
+      started: g.started,
+      provisional: g.provisional,
+      money,
+    };
+  }
+
   const settlement = Object.fromEntries(
-    owners.map((o) => [o, { lightning: net[o], teamPot: teamMoney[o], total: net[o] + teamMoney[o] }]),
+    owners.map((o) => {
+      const s = { lightning: net[o], teamPot: teamMoney[o], total: net[o] + teamMoney[o] };
+      if (thanksgiving) {
+        s.thanksgiving = thanksgiving.money[o];
+        s.total += thanksgiving.money[o];
+      }
+      return [o, s];
+    }),
   );
-  const final = !team.provisional && columns.every((c) => !c.provisional);
-  return { final, team, lightning: { columns, net }, settlement };
+  const final = !team.provisional && columns.every((c) => !c.provisional) && !thanksgiving?.provisional;
+  const out = { final, team, lightning: { columns, net }, settlement };
+  if (thanksgiving) out.thanksgiving = thanksgiving;
+  return out;
 }
 
 const byWeek = (a, b) => a.week - b.week;
@@ -225,7 +284,7 @@ export function defaultWeek(weeks) {
   return (live ?? sorted[sorted.length - 1])?.week ?? null;
 }
 
-const rostered = (weekFile) => TABLES.flatMap((t) => Object.values(weekFile[t].rosters).flat());
+const rostered = (weekFile) => tablesOf(weekFile).flatMap((t) => Object.values(weekFile[t].rosters).flat());
 
 // Games that contain at least one rostered player's team.
 export function relevantGames(weekFile, scoreboard) {
@@ -342,4 +401,55 @@ export function pickOrderProblem(weekFile, league) {
 export function pickOrder(weekFile, league) {
   const order = weekFile?.lightning_table?.pick_order;
   return isPickOrder(order, league) ? order : null;
+}
+
+// Rule 3 (RULES.md): no player may be on every owner's Team table (if everyone picks the same
+// player, everyone re-picks). Returns the names of any player on all of them, for the CLI to warn
+// about. The Thanksgiving Day pool is never checked (unanimous picks are allowed there); the main
+// Team table keeps the rule every week, Thanksgiving week included. "team_table": {"shared_ok": true}
+// switches the check off for a week, only if the league ever agrees an exception.
+export function onEveryTeamTable(weekFile, league) {
+  const table = weekFile?.team_table;
+  if (!table?.rosters || table.shared_ok) return [];
+  const owners = league.owners.map((o) => o.key);
+  const counts = new Map();
+  const names = new Map();
+  for (const o of owners) {
+    for (const p of new Set((table.rosters[o] ?? []).filter((x) => x?.id).map((x) => x.id))) counts.set(p, (counts.get(p) ?? 0) + 1);
+    for (const p of table.rosters[o] ?? []) if (p?.id) names.set(p.id, p.name);
+  }
+  return [...counts].filter(([, n]) => n === owners.length).map(([id]) => names.get(id));
+}
+
+// Thanksgiving Day (RULES.md rule 6): the fourth Thursday of November, as "YYYY-MM-DD".
+export function thanksgivingDate(season) {
+  const first = new Date(Date.UTC(season, 10, 1)).getUTCDay(); // 0 = Sunday
+  const day = 1 + ((4 - first + 7) % 7) + 21;
+  return `${season}-11-${String(day).padStart(2, "0")}`;
+}
+// A kickoff's date in US Eastern time, as "YYYY-MM-DD".
+const easternDate = (iso) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+
+// Rule 6 checks on the Thanksgiving Day pool, as sentences for the CLI to warn about:
+// every pick in a lineup (kicker included) from a different NFL team, and, given the week's
+// scoreboard, every pick from a team playing on Thanksgiving Day.
+export function thanksgivingProblems(weekFile, league, scoreboard = null) {
+  const tg = weekFile?.[THANKSGIVING];
+  if (!tg) return [];
+  const out = [];
+  const day = thanksgivingDate(weekFile.season);
+  const playing = scoreboard ? new Set(scoreboard.games.filter((g) => g.kickoff && easternDate(g.kickoff) === day).flatMap((g) => g.teams)) : null;
+  for (const o of league.owners) {
+    const lineup = tg.rosters[o.key] ?? [];
+    const teams = lineup.map((p) => p?.team);
+    const repeated = [...new Set(teams.filter((t, i) => t && teams.indexOf(t) !== i))];
+    for (const t of repeated) {
+      const who = lineup.filter((p) => p?.team === t).map((p) => p.name).join(", ");
+      out.push(`Thanksgiving Day pool: ${o.display} has more than one pick from ${t} (${who})`);
+    }
+    if (playing) {
+      for (const p of lineup) if (p?.team && !playing.has(p.team)) out.push(`Thanksgiving Day pool: ${o.display}'s ${p.name} (${p.team}) isn't playing on Thanksgiving Day`);
+    }
+  }
+  return out;
 }

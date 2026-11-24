@@ -34,7 +34,7 @@ export function liveBanter({ result, standings = null, league, weekFile, extra =
     capped[kind] = capped[kind] ?? { max, items: [] };
     capped[kind].items.push({ key, text: pick(variants, hash(key)) });
   };
-  const started = result.team.started || result.lightning.columns.some((c) => c.started);
+  const started = result.team.started || result.lightning.columns.some((c) => c.started) || Boolean(result.thanksgiving?.started);
   const order = standings ? [...owners].sort((a, b) => standings.totals[a.key] - standings.totals[b.key]) : null;
 
   if (!started) {
