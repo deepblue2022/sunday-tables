@@ -6,7 +6,11 @@
   "Last place buys the group lunch after the season. The winner picks the restaurant.",
   "Vince has bought lunch three years in a row. Kevin and JD have never bought it.",
   "Art is vegetarian; lunch is usually at a steakhouse.",
-  "Two seafood towers to start, every year, and bottles of Caymus."
+  "Two seafood towers to start, every year, and bottles of Caymus.",
+  "JD picks 'outside the box': often players the weekly consensus rankings don't favor.",
+  "Mxue often takes a very long time to make a pick in the weekly draft.",
+  "Galli once raised a question about a pick after the week's games; the league settled it with a new rule: lineups lock at the first kickoff.",
+  "Mxue is the scorekeeper and maintains the site (and the rules)."
  ],
  "on_last": {
   "Vince": [
@@ -28,7 +32,9 @@
   ],
   "Mxue": [
    "The steakhouse has started chilling the seafood towers.",
-   "Two seafood towers and the Caymus, on Mxue's card. If it ends now."
+   "Two seafood towers and the Caymus, on Mxue's card. If it ends now.",
+   "Mxue is still deciding whether to accept last place.",
+   "The scorekeeper in last place. The math has been checked. The math is not wrong."
   ],
   "Galli": [
    "The steakhouse has started chilling the seafood towers.",
@@ -45,7 +51,8 @@
   ],
   "JD": [
    "If it ends now, JD picks the restaurant, and still won't have bought lunch. The streak lives.",
-   "If it ends now, JD picks the restaurant. Art is already reading the sides."
+   "If it ends now, JD picks the restaurant. Art is already reading the sides.",
+   "If it ends now, JD picks the restaurant. Expect somewhere no ranking has heard of."
   ],
   "Vince": [
    "If it ends now, Vince picks the restaurant and someone else finally pays. The Caymus is confused."
@@ -54,7 +61,9 @@
    "If it ends now, Kevin picks the restaurant. Art is already reading the sides."
   ],
   "Mxue": [
-   "If it ends now, Mxue picks the restaurant. Art is already reading the sides."
+   "If it ends now, Mxue picks the restaurant. Art is already reading the sides.",
+   "If it ends now, Mxue picks the restaurant. Reservations for whenever Mxue decides.",
+   "If it ends now, the scorekeeper wins. Everyone else would like a recount."
   ],
   "Galli": [
    "If it ends now, Galli picks the restaurant. Art is already reading the sides."
@@ -79,7 +88,7 @@
   "Kevin and Galli have each had eight picks score nothing this season, the most in the league; for Galli, five of those didn't even play. Kevin's latest: Jalon Daniels in Week 11, for −$48.",
   "JohnO is +$479 in Lightning and −$220 in the Team table. Brilliant at the side bets, allergic to the main event.",
   "Mxue has gone up, down, up, down for all eleven weeks. Week 11 was up. Week 12 has been warned.",
-  "Week 10: Kenneth Walker III didn't play, and six of the seven Team tables had Walker. JD didn't, and JD won the pot.",
+  "Week 10: six of seven Team tables had Kenneth Walker III, who didn't play. JD had Chuba Hubbard instead, alone: 29 points and the pot.",
   "Week 2: Puka Nacua didn't play, and Art, Mxue, Galli and JohnO had all picked Puka. One DNP, four victims.",
   "Same Team table, three times: Art and Galli lost to Vince in Week 2, Mxue and Galli split the Week 7 pot, Art and Mxue lost to JD in Week 10. Copying homework works one time in three.",
   "Jahmyr Gibbs has been on Art's Team table in ten of eleven weeks, and on Mxue's and Vince's in nine. Original thinking is not this league's strength.",
@@ -93,6 +102,21 @@
   "Kevin has been the week's biggest winner three times and the week's biggest loser three times. Kevin doesn't do quiet Sundays.",
   "Galli has won four Team pots (one shared) and been the week's biggest loser three times. Galli contains multitudes.",
   "Art and JohnO have tied for the top of a Lightning column three times. Great minds, identical points.",
-  "Vince has finished a week up only four times in eleven. Lunch for seven doesn't pay for itself."
+  "Vince has finished a week up only four times in eleven. Lunch for seven doesn't pay for itself.",
+  "JD has made 16 Team-table picks this season that nobody else made, the most in the league. The consensus rankings are more of a suggestion.",
+  "Week 4: JD was the only one on Kenneth Walker III. Walker scored 29 and JD took the Team pot. The experts were not consulted.",
+  "JD's Team-table method: open the consensus rankings, then pick someone else.",
+  "Mxue's draft picks arrive eventually. The league has learned to bring snacks.",
+  "The Lightning draft has no pick clock. Mxue is the reason someone keeps suggesting one.",
+  "Lineups lock at the first kickoff, good or bad. Galli knows why.",
+  "Every league has a rule named after someone. Ours locks the lineups at kickoff. Thanks, Galli.",
+  "Mxue keeps the scores, writes up the rules and runs the site, and is somehow in the money. The league would like an audit.",
+  "Every number on this site was checked by Mxue. Every Mxue pick was not.",
+  "Only two of Mxue's Team-table picks this season were ones nobody else made, the fewest in the league. The scorekeeper plays it by the book.",
+  "The site warns when a player is on all seven Team tables. It has no warning for Mxue turning in the same Team table as Art. Week 10 suggests it needs one.",
+  "Mxue has lost more close Lightning columns than anyone. The scorekeeper re-checked the math. It's still a loss.",
+  "If the ticker ever stops moving, don't panic. Mxue is probably still making a pick.",
+  "Mxue maintains this site for free. The league pays in complaints and the occasional seafood tower.",
+  "Mxue: scorekeeper, rulebook editor, site builder, and still not first. Some jobs don't come with perks."
  ]
 }

@@ -238,3 +238,35 @@ test("the command line warns about stale commentary at most once, at the end", a
   assert.ok(warnings.length <= 1, out);
   if (warnings.length) assert.match(out.trimEnd().split("\n").at(-1), /ticker commentary/, "the reminder comes last");
 });
+
+const SOLO = /Nobody else took|off the board|exactly one Team table/;
+const solos = (l) => l.filter((x) => SOLO.test(x));
+
+test("a Team-table pick nobody else made that pays off (20+) gets a line; a shared one doesn't", () => {
+  // helpers give every owner their own players, so Art's 25 is a pick nobody else made
+  const solo = run({ team: { Art: [25, 1, 1, 1, 1] } });
+  assert.equal(solos(solo).length, 1);
+  about(solos(solo), "Art", "25");
+  assert.ok(!solos(solo).some((l) => /rankings|share/.test(l)), "no claims about rankings or Lightning");
+  // the same player on another owner's Team table: no line
+  const shared = run({ team: { Art: [25, 1, 1, 1, 1] }, edit: (wf) => (wf.team_table.rosters.JD[0] = { ...wf.team_table.rosters.Art[0] }) });
+  assert.deepEqual(solos(shared), []);
+  // the same player twice on Art's own table: still Art's alone, and one line, not two
+  const twice = run({ team: { Art: [25, 1, 1, 1, 1] }, edit: (wf) => (wf.team_table.rosters.Art[1] = { ...wf.team_table.rosters.Art[0] }) });
+  assert.equal(solos(twice).length, 1);
+  // another owner has the player on the Lightning table only: still the only Team table
+  const light = run({ team: { Art: [25, 1, 1, 1, 1] }, edit: (wf) => (wf.lightning_table.rosters.JD[0] = { ...wf.team_table.rosters.Art[0] }) });
+  assert.equal(solos(light).length, 1);
+});
+
+test("the nobody-else line: 20 points or more, played or playing, at most two", () => {
+  assert.deepEqual(solos(run({ team: { Art: [19, 1, 1, 1, 1] } })), []);
+  assert.equal(solos(run({ team: { Art: [20, 1, 1, 1, 1] } })).length, 1);
+  const live = run({ team: { Art: [22, 1, 1, 1, 1] }, states: { "T-Art-0": "live" } });
+  assert.ok(solos(live).length === 1);
+  for (const state of ["not_started", "dnp", "unknown"]) {
+    assert.deepEqual(solos(run({ team: { Art: [22, 1, 1, 1, 1] }, states: { "T-Art-0": state } })), [], state);
+  }
+  const many = run({ team: { Art: [30, 1, 1, 1, 1], JD: [25, 1, 1, 1, 1], Kevin: [21, 1, 1, 1, 1], Mxue: [24, 1, 1, 1, 1] } });
+  assert.equal(solos(many).length, 2);
+});

@@ -7,6 +7,10 @@ the **Team table** and the **Lightning table**. The site shows them live and kee
 - Picks are made on the day of the first game of the week. The scorekeeper posts both tables once the
   picks are in.
 - **Tight ends count as WR:** a tight end can be picked in any WR spot, on either table.
+- **Lineups lock when the week's first game kicks off**, whatever day that is, good or bad. Any
+  discrepancy in a posted table must be raised and settled before then (so the tables are posted before
+  kickoff); after kickoff, the picks stand as posted. This covers who was picked: a mistake in how the site
+  reads a posted name is still corrected.
 
 ## 2. Scoring (both tables)
 - **Passing:** 1 point per 20 yards; 3 points per TD; 1 point per 2-point conversion pass.
@@ -48,8 +52,11 @@ Thanksgiving week has the usual **main pool** (Team table and Lightning table, a
 **Thanksgiving Day pool**. Both count toward the regular season.
 - **Who can be picked:** only players in games on Thanksgiving Day (Thursday). Players picked for it can
   also be picked in the main pool.
-- **Lineup:** 1 QB, 2 RB, 2 WR/TE, and a kicker. **Every player in a lineup, the kicker included, must be
-  from a different NFL team.**
+- **Lock:** the Thanksgiving Day pool locks with everything else, at the week's first kickoff (rule 1),
+  even when that is a Wednesday game.
+- **Lineup:** 1 QB, 2 RB, 2 WR/TE, and a kicker. **The five players (QB, RBs, WRs) must each be from a
+  different NFL team.** The kicker can be from any team playing on Thanksgiving Day, including one of
+  theirs.
 - **Unanimous picks are allowed:** the same player can be in all seven lineups (rule 3 doesn't apply here).
 - **Money:** each owner puts in $20 ($140 pot). The highest five-player total (QB, RBs, WRs; scored as in
   rule 2) takes the pot.
@@ -89,7 +96,7 @@ Data: ESPN public API (scoreboard + game summary box scores). 2-pt conversions a
 `"thanksgiving_table": {"columns": ["QB", "RB", "RB", "WR", "WR", "K"], "rosters": {"Art": [...], ...}}`
 (the shape is in `test/thanksgiving.test.js`). The kicker column must be named exactly `"K"`, once: that is
 how `resolve` knows to look up a kicker there and how the scoring knows the tiebreak. No `pick_order`.
-`resolve` and `npm run score -- <season> <week>` warn if a lineup repeats an NFL team (kicker included) or
+`resolve` and `npm run score -- <season> <week>` warn if a lineup's five players repeat an NFL team (the kicker doesn't count) or
 names someone not playing on Thanksgiving Day. The pool is never checked against rule 3 (unanimous picks are
 allowed there); the main Team table keeps rule 3 that week too. `team_table.shared_ok: true` switches the
 rule 3 check off for a week: only for an exception the league agrees, never for Thanksgiving.

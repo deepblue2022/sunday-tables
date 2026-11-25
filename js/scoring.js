@@ -433,7 +433,7 @@ export function thanksgivingDate(season) {
 const easternDate = (iso) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
 
 // Rule 6 checks on the Thanksgiving Day pool, as sentences for the CLI to warn about:
-// every pick in a lineup (kicker included) from a different NFL team, and, given the week's
+// the five players in a lineup from different NFL teams (the kicker may share one), and, given the week's
 // scoreboard, every pick from a team playing on Thanksgiving Day.
 export function thanksgivingProblems(weekFile, league, scoreboard = null) {
   const tg = weekFile?.[THANKSGIVING];
@@ -443,10 +443,13 @@ export function thanksgivingProblems(weekFile, league, scoreboard = null) {
   const playing = scoreboard ? new Set(scoreboard.games.filter((g) => g.kickoff && easternDate(g.kickoff) === day).flatMap((g) => g.teams)) : null;
   for (const o of league.owners) {
     const lineup = tg.rosters[o.key] ?? [];
-    const teams = lineup.map((p) => p?.team);
+    // the five players must be from different teams; the kicker can be from any Thanksgiving Day team
+    const kick = tg.columns.indexOf("K");
+    const five = lineup.filter((_, i) => i !== kick);
+    const teams = five.map((p) => p?.team);
     const repeated = [...new Set(teams.filter((t, i) => t && teams.indexOf(t) !== i))];
     for (const t of repeated) {
-      const who = lineup.filter((p) => p?.team === t).map((p) => p.name).join(", ");
+      const who = five.filter((p) => p?.team === t).map((p) => p.name).join(", ");
       out.push(`Thanksgiving Day pool: ${o.display} has more than one pick from ${t} (${who})`);
     }
     if (playing) {

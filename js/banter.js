@@ -158,6 +158,23 @@ export function liveBanter({ result, standings = null, league, weekFile, extra =
   }
 
   // ---- the Team table ----
+  // a pick nobody else made, paying off (20 or more)
+  // (owners, not slots: the same player twice on one table still counts as that owner's alone)
+  const pickedBy = {};
+  for (const o of owners) for (const c of result.team.rows[o.key].players) (pickedBy[c.id] ??= new Set()).add(o.key);
+  const soloDone = new Set();
+  for (const o of owners) {
+    for (const c of result.team.rows[o.key].players) {
+      if (pickedBy[c.id].size === 1 && c.points >= 20 && PLAYED.includes(c.state) && !soloDone.has(c.id)) {
+        soloDone.add(c.id);
+        addCapped("solo", 2, `solo|${o.key}|${c.id}`, [
+          `Nobody else took ${short(c.name)} for the Team table. ${o.display} did, and ${short(c.name)} has ${c.points}${c.state === "live" ? " and counting" : ""}.`,
+          `${o.display} went off the board with ${short(c.name)}: ${c.points} points, on no other Team table.`,
+          `${short(c.name)}, ${c.points} points, on exactly one Team table: ${o.display}'s. Nobody else saw it coming.`,
+        ]);
+      }
+    }
+  }
   const sig = (key) => result.team.rows[key].players.map((c) => c.id).sort().join(",");
   const twins = owners.filter((o, i) => owners.some((p, j) => j !== i && sig(p.key) === sig(o.key)));
   if (twins.length >= 2) {

@@ -1,5 +1,5 @@
 // The Thanksgiving Day pool (RULES.md rule 6): QB, RB, RB, WR, WR and a kicker from Thanksgiving
-// Day games, every pick from a different NFL team; $20 each, highest five-player total takes the
+// Day games, the five players from different NFL teams (the kicker from any of them); $20 each, highest five-player total takes the
 // pot, the kicker (1 per XP, 3 per FG) breaks a tie, still tied splits it.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -100,11 +100,15 @@ test("live: the pool is provisional while a game or the kicker's game is on", ()
   assert.equal(r.final, false);
 });
 
-test("rule checks: every pick from a different team (kicker included), all from Thanksgiving Day games", () => {
+test("rule checks: the five players from different teams (the kicker can share one), all from Thanksgiving Day games", () => {
   const { weekFile } = week();
   assert.deepEqual(thanksgivingProblems(weekFile, league), []);
+  // the kicker from the QB's team: allowed
   weekFile.thanksgiving_table.rosters.Art[5] = { ...weekFile.thanksgiving_table.rosters.Art[5], team: "CHI" };
-  assert.match(thanksgivingProblems(weekFile, league)[0], /Art has more than one pick from CHI \(Art G0, Art G5\)/);
+  assert.deepEqual(thanksgivingProblems(weekFile, league), []);
+  // two of the five from one team: not allowed (the kicker isn't listed)
+  weekFile.thanksgiving_table.rosters.Art[1] = { ...weekFile.thanksgiving_table.rosters.Art[1], team: "CHI" };
+  assert.deepEqual(thanksgivingProblems(weekFile, league), ["Thanksgiving Day pool: Art has more than one pick from CHI (Art G0, Art G1)"]);
   // with the week's scoreboard: a pick whose team doesn't play on Thanksgiving Day
   const game = (teams, kickoff) => ({ id: teams.join(""), teams, phase: "pre", kickoff });
   const scoreboard = {
@@ -236,5 +240,7 @@ test("the live commentary copes with a Thanksgiving week", () => {
   const lines = liveBanter({ result: r, standings: { totals, base }, league, weekFile, extra: { onFirst: { [OWNERS.at(-1)]: ["picks the restaurant"] } } });
   assert.ok(Array.isArray(lines) && lines.every((l) => typeof l === "string"));
   assert.ok(lines.includes("picks the restaurant"));
+  // the nobody-else line looks at the main Team table only, not the Thanksgiving Day pool
+  assert.ok(!lines.some((l) => /Nobody else took|off the board|exactly one Team table/.test(l) && /Art G0/.test(l)), lines.join("\n"));
   assert.ok(lines.some((l) => l.includes(OWNERS.at(-1)) && l.includes(OWNERS[0]) && /first|top/.test(l)), lines.join("\n"));
 });
