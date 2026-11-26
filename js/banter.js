@@ -220,6 +220,87 @@ export function liveBanter({ result, standings = null, league, weekFile, extra =
     }
   }
 
+  // ---- the Thanksgiving Day pool (Thanksgiving week only) ----
+  const tg = result.thanksgiving;
+  if (tg?.started) {
+    const rows = owners.map((o) => ({ key: o.key, ...tg.rows[o.key] })).sort((a, b) => b.total - a.total);
+    const [g1, g2] = rows;
+    const kick = weekFile?.thanksgiving_table?.columns.indexOf("K") ?? -1;
+    const kicker = (key) => (kick >= 0 ? short(tg.rows[key].players[kick].name) : "the kicker");
+    // "A and B", "A, B and C"
+    const list = (names) => (names.length <= 2 ? names.join(" and ") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`);
+    if (tg.provisional) {
+      if (g1.total > g2.total) {
+        add(`tg|${g1.key}`, [
+          `${name(g1.key)} leads the Thanksgiving Day pool with ${g1.total}, ${g1.total - g2.total} ahead of ${name(g2.key)}. The ${pot} turkey is in the oven.`,
+          `Thanksgiving Day pool: ${name(g1.key)} on top with ${g1.total}. ${name(g2.key)} is ${g1.total - g2.total} back and eyeing the drumstick.`,
+          `${name(g1.key)} leads the Thanksgiving Day pool with ${g1.total}. Everyone else is just here for the pie.`,
+        ]);
+        if (g1.total - g2.total <= 5) {
+          add(`tgclose|${g1.key}|${g2.key}`, [
+            `Thanksgiving Day pool race: ${name(g1.key)} ${g1.total}, ${name(g2.key)} ${g2.total}. Too close to carve.`,
+            `Just ${g1.total - g2.total} between ${name(g1.key)} and ${name(g2.key)} for the Thanksgiving ${pot}. Nobody leaves the table yet.`,
+          ]);
+        }
+      } else if (g1.total > 0) {
+        const level = rows.filter((r) => r.total === g1.total).map((r) => name(r.key));
+        add(`tglevel|${level.join("|")}`, [
+          `${list(level)} are level in the Thanksgiving Day pool on ${g1.total}. ${level.length === 2 ? `It may come down to the kickers: ${kicker(rows[0].key)} vs ${kicker(rows[1].key)}` : "It may come down to the kickers"}.`,
+          `${list(level)} are tied on ${g1.total} in the Thanksgiving Day pool. Thanksgiving: decided by a kicker, as the Pilgrims intended.`,
+        ]);
+      }
+    } else {
+      const winners = tg.winners.map(name);
+      add(`tgwin|${winners.join("|")}`,
+        winners.length === 1
+          ? tg.tiedOnTotal
+            ? [`${winners[0]} wins the Thanksgiving Day pool on the kicker tiebreak. Never doubt a kicker. Thanks, ${kicker(tg.winners[0])}.`]
+            : [
+                `${winners[0]} takes the Thanksgiving ${pot} with ${tg.rows[tg.winners[0]].total}. The leftovers are on ${winners[0]}.`,
+                `${winners[0]} carves up the Thanksgiving Day pool with ${tg.rows[tg.winners[0]].total}. Pass the gravy.`,
+                `${winners[0]} wins the Thanksgiving Day pool with ${tg.rows[tg.winners[0]].total}. The other ${others} are doing the dishes.`,
+              ]
+          : [`${list(winners)} split the Thanksgiving ${pot}${tg.tiedOnTotal ? ", the kickers tied too" : ""}. Everyone gets a slice.`],
+      );
+    }
+    // the bottom of the pool, once that owner's five players are done
+    const gl = rows[rows.length - 1];
+    const glDone = tg.rows[gl.key].players.every((c, i) => i === kick || ["final", "dnp", "bye"].includes(c.state));
+    // (not when last place is shared: no singling one owner out)
+    if (glDone && gl.total < g1.total && rows.at(-2).total !== gl.total) {
+      add(`tglast|${gl.key}`, [
+        `${name(gl.key)} finished the Thanksgiving Day pool on ${gl.total}. More turkey than team.`,
+        `${name(gl.key)}'s Thanksgiving lineup: ${gl.total} points. Grandma's lineup would have done better.`,
+        `${name(gl.key)} is bottom of the Thanksgiving Day pool with ${gl.total}. At least the pie is still coming.`,
+      ]);
+    }
+    // a player in all but one Thanksgiving lineup, paying off: the one owner without that player feels it
+    const has = {};
+    for (const o of owners) {
+      tg.rows[o.key].players.forEach((c, i) => {
+        if (i !== kick) (has[c.id] ??= { cell: c, owners: new Set() }).owners.add(o.key);
+      });
+    }
+    for (const { cell, owners: who } of Object.values(has)) {
+      if (who.size === owners.length - 1 && cell.points >= 15 && PLAYED.includes(cell.state)) {
+        const missing = owners.find((o) => !who.has(o.key));
+        addCapped("tgmiss", 1, `tgmiss|${cell.id}|${missing.key}`, [
+          `${others.replace(/^./, (c) => c.toUpperCase())} of ${word(owners.length)} Thanksgiving lineups have ${short(cell.name)}. ${missing.display} doesn't, and ${short(cell.name)} has ${cell.points}.`,
+          `Everyone but ${missing.display} took ${short(cell.name)} for the Thanksgiving Day pool. ${short(cell.name)}: ${cell.points}${cell.state === "live" ? " and counting" : ""}.`,
+          `${missing.display} faded ${short(cell.name)} in the Thanksgiving Day pool. ${short(cell.name)} has ${cell.points}. Bold. Wrong, but bold.`,
+        ]);
+      }
+      // ...or flopping: the one owner who passed looks smart
+      if (who.size === owners.length - 1 && cell.state === "final" && cell.points <= 5) {
+        const missing = owners.find((o) => !who.has(o.key));
+        addCapped("tgmiss", 1, `tgflop|${cell.id}|${missing.key}`, [
+          `Everyone but ${missing.display} took ${short(cell.name)} for Thanksgiving, and ${short(cell.name)} gave them ${cell.points}. ${missing.display} would like to say grace.`,
+          `${others.replace(/^./, (c) => c.toUpperCase())} owners rode ${short(cell.name)} on Thanksgiving: ${cell.points} points. ${missing.display} passed and is now insufferable.`,
+        ]);
+      }
+    }
+  }
+
   // ---- this week's money ----
   const net = owners.map((o) => ({ key: o.key, cents: result.settlement[o.key].total })).sort((a, b) => a.cents - b.cents);
   const worst = net[0];

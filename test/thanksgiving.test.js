@@ -244,3 +244,43 @@ test("the live commentary copes with a Thanksgiving week", () => {
   assert.ok(!lines.some((l) => /Nobody else took|off the board|exactly one Team table/.test(l) && /Art G0/.test(l)), lines.join("\n"));
   assert.ok(lines.some((l) => l.includes(OWNERS.at(-1)) && l.includes(OWNERS[0]) && /first|top/.test(l)), lines.join("\n"));
 });
+
+test("Thanksgiving Day pool commentary: leader and close race, a tie down to the kickers, the winner, and everyone-but-one picks", () => {
+  const lines = (opts, edit) => {
+    const { weekFile, playersById } = week(opts);
+    if (edit) edit(weekFile, playersById);
+    return liveBanter({ result: scoreWeek(weekFile, playersById, league), standings: null, league, weekFile });
+  };
+  const has = (l, re) => assert.ok(l.some((x) => re.test(x)), l.join("\n"));
+  const hasNot = (l, re) => assert.ok(!l.some((x) => re.test(x)), l.join("\n"));
+  // still being played (Art's QB live): Art leads by 3, a close race
+  const live = lines({ pts: { Art: [20, 10, 10, 10, 10], Kevin: [20, 10, 10, 10, 7] }, states: { "G-Art-0": "live" } });
+  has(live, /Art (leads the Thanksgiving Day pool with 60(, 3 ahead of Kevin|\. Everyone else)|on top with 60)/);
+  has(live, /Thanksgiving Day pool race: Art 60, Kevin 57|Just 3 between Art and Kevin/);
+  // level while being played: the kickers are named
+  const level = lines({ pts: { Art: [20, 10, 10, 10, 10], Kevin: [20, 10, 10, 10, 10] }, states: { "G-Art-0": "live" } });
+  has(level, /Art and Kevin are (level in the Thanksgiving Day pool on 60\. It may come down to the kickers: G5 vs G5|tied on 60 in the Thanksgiving Day pool)/);
+  // final: a winner outright, and a winner on the kicker tiebreak
+  has(lines({ pts: { Art: [20, 10, 10, 10, 10] } }), /Art (takes the Thanksgiving \$140 with 60|carves up the Thanksgiving Day pool with 60|wins the Thanksgiving Day pool with 60)/);
+  has(lines({ pts: { Art: [20, 10, 10, 10, 10], Kevin: [20, 10, 10, 10, 10] }, kick: { Art: { fgMade: 1 } } }), /Art wins the Thanksgiving Day pool on the kicker tiebreak/);
+  has(lines({ pts: { Art: [20, 10, 10, 10, 10], Kevin: [20, 10, 10, 10, 10] } }), /Art and Kevin split the Thanksgiving \$140, the kickers tied too/);
+  // a player in six of the seven lineups scoring 15+: the seventh owner is named
+  const six = lines({ pts: { Art: [0, 0, 0, 18, 0] } }, (wf, byId) => {
+    for (const o of OWNERS.filter((o) => o !== "JD")) wf.thanksgiving_table.rosters[o][3] = { ...wf.thanksgiving_table.rosters.Art[3] };
+  });
+  has(six, /Six of seven Thanksgiving lineups have G3\. JD doesn't, and G3 has 18|Everyone but JD took G3|JD faded G3 in the Thanksgiving Day pool\. G3 has 18/);
+  // the bottom of the pool once their players are done, and an everyone-but-one flop
+  const bottom = lines({ pts: { Art: [20, 10, 10, 10, 10], Kevin: [1, 1, 1, 1, 1], Mxue: [5, 5, 5, 5, 5], Vince: [5, 5, 5, 5, 5], Galli: [5, 5, 5, 5, 5], JD: [5, 5, 5, 5, 5], JohnO: [5, 5, 5, 5, 5] } });
+  // last place shared: nobody singled out
+  hasNot(lines({ pts: { Art: [20, 10, 10, 10, 10], Kevin: [1, 1, 1, 1, 1], Mxue: [1, 1, 1, 1, 1] } }), /More turkey than team|Grandma's lineup|bottom of the Thanksgiving/);
+  // three or more names: commas, then "and"
+  has(lines({ pts: { Art: [20, 10, 10, 10, 10], Kevin: [20, 10, 10, 10, 10], Mxue: [20, 10, 10, 10, 10] } }), /Art, Mxue and Kevin split the Thanksgiving \$140/);
+  has(bottom, /Kevin (finished the Thanksgiving Day pool on 5|'s Thanksgiving lineup: 5 points|is bottom of the Thanksgiving Day pool with 5)/);
+  const flop = lines({ pts: { Art: [0, 0, 0, 3, 0] } }, (wf) => {
+    for (const o of OWNERS.filter((o) => o !== "JD")) wf.thanksgiving_table.rosters[o][3] = { ...wf.thanksgiving_table.rosters.Art[3] };
+  });
+  has(flop, /JD would like to say grace|JD passed and is now insufferable/);
+  // not Thanksgiving week: no pool lines
+  const { weekFile, playersById } = build({ Art: [10, 10, 10, 10, 10] });
+  hasNot(liveBanter({ result: scoreWeek(weekFile, playersById, league), standings: null, league, weekFile }), /Thanksgiving/);
+});
